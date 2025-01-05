@@ -314,7 +314,7 @@ def generate_plane(size=5.0):
         "normals": normals,
         "indices": indices,
         "texcoords": texcoords,
-        "texture": "chessboard.jpg",
+        "texture": "assets/chessboard.jpg",
         "transform": glm.mat4(1.0)
     }
 
