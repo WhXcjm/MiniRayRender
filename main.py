@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 18:09:02
+LastEditTime: 2025-01-05 21:48:56
 FilePath: \大作业\main.py
 Description: 
 
@@ -30,6 +30,7 @@ def main():
     )
     # 加地平面棋盘
     main_window.add_object(add_shape_to_scene("Plane", 16, texture="assets/chessboard.jpg"))
+    # main_window.object_list.resizeColumnsToContents()
     main_window.show()
 
     # 进入主事件循环

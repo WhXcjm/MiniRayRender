@@ -1,7 +1,20 @@
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QColorDialog, QDialog
+'''
+Author: Wh_Xcjm
+Date: 2025-01-04 14:36:07
+LastEditor: Wh_Xcjm
+LastEditTime: 2025-01-05 22:25:51
+FilePath: \大作业\gui\main_window.py
+Description: 
+
+Copyright (c) 2025 by WhXcjm, All Rights Reserved. 
+Github: https://github.com/WhXcjm
+'''
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog
+from PySide6.QtCore import Qt
 from gui.preview_widget import PreviewWidget
 from model.shape_generator import ShapeGenerator
 from model.add_shape import AddShapeDialog, add_shape_to_scene
+from model.transform_config import TransformConfigDialog
 from utils.logger import logger
 import glm
 import numpy as np
@@ -28,13 +41,13 @@ class MainWindow(QMainWindow):
         # 右侧功能区
         right_layout = QVBoxLayout()
 
-        # 物体列表（改为 QTableWidget）
+        # 物体列表
         self.object_list = QTableWidget()
-        self.object_list.setColumnCount(3)  # 列数：名称、类型、外观
-        self.object_list.setHorizontalHeaderLabels(["Name", "Type", "Appearance"])
-        self.object_list.setColumnWidth(0, 81)  # 第一列
-        self.object_list.setColumnWidth(1, 53)  # 第二列
-        self.object_list.setColumnWidth(2, 162)  # 第三列
+        self.object_list.setColumnCount(3)
+        self.object_list.setHorizontalHeaderLabels(["Name", "Appearance","More"])
+        self.object_list.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeMode.ResizeToContents)
+        self.object_list.horizontalHeader().setSectionResizeMode(1,QHeaderView.ResizeMode.Stretch)
+        self.object_list.horizontalHeader().setSectionResizeMode(2,QHeaderView.ResizeMode.ResizeToContents)
         right_layout.addWidget(self.object_list)
 
         # 添加功能按钮
@@ -73,7 +86,6 @@ class MainWindow(QMainWindow):
         # 初始化物体列表
         self.scene_objects = []
         self.update_object_list()
-        self.preview.update_objects(self.scene_objects)
 
         self.is_rotating = False  # 旋转状态
 
@@ -86,12 +98,69 @@ class MainWindow(QMainWindow):
             row = self.object_list.rowCount()
             self.object_list.insertRow(row)
             self.object_list.setItem(row, 0, QTableWidgetItem(obj["name"]))
-            obj_type = "texture" if "texture" in obj else "color"
-            self.object_list.setItem(row, 1, QTableWidgetItem(obj_type))
-            appearance =f"Texture: \"{obj['texture']}\"" if "texture" in obj else f"Color: {obj['color']}"
-            self.object_list.setItem(row, 2, QTableWidgetItem(appearance))
+            appearance = f"Texture: \"{obj['texture']}\"" if "texture" in obj else f"Color: {obj['color']}"
+            item = QTableWidgetItem(appearance)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            item.setToolTip(appearance)  # 鼠标悬停时显示完整内容
+            self.object_list.setItem(row, 1, item)
+
+            button = QPushButton("...")
+            button.setMinimumWidth(5)
+            button.setMaximumWidth(50)
+            button.clicked.connect(lambda _, o=obj: self.show_transform_dialog(o))
+            self.object_list.setCellWidget(row, 2, button)
+
         self.preview.update_objects(self.scene_objects)
 
+    def show_transform_dialog(self, obj):
+        """
+        显示平移、旋转和缩放设置对话框，并根据修改更新 transform。
+        """
+        # 获取物体的当前平移、旋转和缩放值
+        obj["translation"] = glm.vec3(0.0) if "translation" not in obj else obj["translation"]
+        obj["rotation"] = glm.vec3(0.0) if "rotation" not in obj else obj["rotation"]
+        obj["scale"] = glm.vec3(1.0, 1.0, 1.0) if "scale" not in obj else obj["scale"]
+
+        # 创建并展示 TransformConfigDialog 对话框
+        dialog = TransformConfigDialog(
+            obj["name"],
+            translation=obj["translation"],
+            rotation=obj["rotation"],
+            scale=obj["scale"]
+        )
+
+        if dialog.exec() == QDialog.Accepted:
+            # 获取新的平移、旋转和缩放值
+            new_translation = glm.vec3(dialog.translation_x.value(), dialog.translation_y.value(), dialog.translation_z.value())
+            new_rotation = glm.vec3(dialog.rotation_x.value(), dialog.rotation_y.value(), dialog.rotation_z.value())
+            new_scale = glm.vec3(dialog.scale_x.value(), dialog.scale_y.value(), dialog.scale_z.value())
+
+            # 更新 obj 中的值
+            obj["translation"] = new_translation
+            obj["rotation"] = new_rotation
+            obj["scale"] = new_scale
+
+            # 使用新的平移、旋转和缩放值重新合成 transform
+            obj["transform"] = glm.mat4(1.0)  # 重置为单位矩阵
+
+            # 先缩放
+            obj["transform"] = glm.scale(obj["transform"], new_scale)
+
+            # 使用四元数进行旋转以避免万向锁问题
+            rotation_quaternion = glm.quat()
+            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.x), glm.vec3(1.0, 0.0, 0.0))  # 绕 X 轴旋转
+            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.y), glm.vec3(0.0, 1.0, 0.0))  # 绕 Y 轴旋转
+            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.z), glm.vec3(0.0, 0.0, 1.0))  # 绕 Z 轴旋转
+
+            # 将旋转四元数转换为矩阵
+            obj["transform"] = obj["transform"] * glm.mat4_cast(rotation_quaternion)
+
+            # 最后平移
+            obj["transform"] = glm.translate(obj["transform"], new_translation)
+
+            # 更新物体列表
+            self.update_object_list()  # 更新列表与渲染
+            
     def toggle_rotation(self):
         """
         切换旋转状态，开始或停止旋转
@@ -175,7 +244,5 @@ class MainWindow(QMainWindow):
             # 将生成的形状添加到场景中
             self.add_object(shape_data)
 
-            # 更新预览
-            self.preview.update_objects(self.scene_objects)
             name = shape_data["name"]
             logger.info(f"Added shape: {name} to scene")
