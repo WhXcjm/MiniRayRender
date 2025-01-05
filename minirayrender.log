@@ -42,3 +42,86 @@
 2025-01-05 13:19:41,277 - MiniRayRender - INFO - Generating shape: Sphere with size=2
 2025-01-05 13:19:41,278 - MiniRayRender - INFO - Generating sphere with radius=2, segments=32, rings=32
 2025-01-05 13:19:41,280 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:35:36,923 - MiniRayRender - INFO - Generating shape: Sphere with size=3, color=None, texture=E:/Documents/北航本科/大二/计算机图形学/大作业/earthmap.jpg
+2025-01-05 13:35:36,924 - MiniRayRender - INFO - Generating shape: Sphere with size=3
+2025-01-05 13:35:36,924 - MiniRayRender - INFO - Generating sphere with radius=3, segments=32, rings=32
+2025-01-05 13:35:36,927 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:36:15,257 - MiniRayRender - INFO - Generating shape: Sphere with size=3, color=None, texture=E:/Documents/北航本科/大二/计算机图形学/大作业/earthmap.jpg
+2025-01-05 13:36:15,258 - MiniRayRender - INFO - Generating shape: Sphere with size=3
+2025-01-05 13:36:15,258 - MiniRayRender - INFO - Generating sphere with radius=3, segments=32, rings=32
+2025-01-05 13:36:15,261 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:43:33,840 - MiniRayRender - INFO - Generating plane with size=8
+2025-01-05 13:45:16,734 - MiniRayRender - INFO - Generating shape: chessboard with size=8, color=None, texture=chessboard.jpg
+2025-01-05 13:45:16,734 - MiniRayRender - INFO - Generating shape: chessboard with size=8
+2025-01-05 13:45:16,735 - MiniRayRender - ERROR - Unknown shape: chessboard
+2025-01-05 13:53:57,378 - MiniRayRender - INFO - Generating shape: Plane with size=8, color=None, texture=chessboard.jpg
+2025-01-05 13:53:57,378 - MiniRayRender - INFO - Generating shape: Plane with size=8
+2025-01-05 13:53:57,378 - MiniRayRender - INFO - Generating plane with size=8
+2025-01-05 14:01:36,564 - MiniRayRender - INFO - Generating shape #1: Plane with size=8, color=None, texture=chessboard.jpg
+2025-01-05 14:01:36,565 - MiniRayRender - INFO - Generating shape: Plane with size=8
+2025-01-05 14:01:36,565 - MiniRayRender - INFO - Generating plane with size=8
+2025-01-05 14:01:55,806 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 14:01:55,806 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 14:01:55,806 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 14:02:10,137 - MiniRayRender - INFO - Generating shape #2: 1 with size=(0.11764705926179886, 0.03921568766236305, 1.0), color=None, texture=None
+2025-01-05 14:02:10,137 - MiniRayRender - INFO - Generating shape: 1 with size=(0.11764705926179886, 0.03921568766236305, 1.0)
+2025-01-05 14:02:10,138 - MiniRayRender - ERROR - Unknown shape: 1
+2025-01-05 14:03:05,163 - MiniRayRender - INFO - Generating shape #3: 1 with size=(0.95686274766922, 0.7960784435272217, 1.0), color=None, texture=None
+2025-01-05 14:03:05,163 - MiniRayRender - INFO - Generating shape: 1 with size=(0.95686274766922, 0.7960784435272217, 1.0)
+2025-01-05 14:03:05,164 - MiniRayRender - ERROR - Unknown shape: 1
+2025-01-05 14:04:38,915 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 14:04:38,916 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 14:04:38,916 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 14:04:50,651 - MiniRayRender - INFO - Generating shape #2: Sphere with size=1, color=(0.35686275362968445, 0.2980392277240753, 1.0), texture=None
+2025-01-05 14:04:50,651 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 14:04:50,651 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 14:04:50,654 - MiniRayRender - INFO - Added shape: Sphere_2 to scene
+2025-01-05 14:05:20,344 - MiniRayRender - INFO - Resetting view
+2025-01-05 14:07:48,873 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 14:07:48,874 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 14:07:48,874 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 14:07:53,412 - MiniRayRender - INFO - Resetting view
+2025-01-05 14:22:23,572 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 14:22:23,573 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 14:22:23,573 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 15:10:31,199 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 15:10:31,199 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 15:10:31,200 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 15:10:40,477 - MiniRayRender - INFO - Generating shape #2: Sphere with size=1, color=(1.0, 0.18431372940540314, 0.30588236451148987), texture=None
+2025-01-05 15:10:40,478 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 15:10:40,478 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 15:10:40,480 - MiniRayRender - INFO - Added shape: Sphere_2 to scene
+2025-01-05 15:10:47,119 - MiniRayRender - INFO - Generating shape #3: Cuboid with size=1, color=(0.09019608050584793, 0.3019607961177826, 1.0), texture=None
+2025-01-05 15:10:47,119 - MiniRayRender - INFO - Generating shape: Cuboid with size=1
+2025-01-05 15:10:47,119 - MiniRayRender - INFO - Generating cuboid with width=1, height=1, depth=1
+2025-01-05 15:10:47,120 - MiniRayRender - INFO - Added shape: Cuboid_3 to scene
+2025-01-05 15:11:43,213 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 15:11:43,214 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 15:11:43,214 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 15:13:21,050 - MiniRayRender - INFO - Generating shape #2: Cuboid with size=1, color=(0.5960784554481506, 1.0, 0.2862745225429535), texture=None
+2025-01-05 15:13:25,647 - MiniRayRender - INFO - Generating shape: Cuboid with size=1
+2025-01-05 15:13:28,005 - MiniRayRender - INFO - Generating cuboid with width=1, height=1, depth=1
+2025-01-05 15:15:38,407 - MiniRayRender - INFO - Added shape: Cuboid_2 to scene
+2025-01-05 15:17:11,718 - MiniRayRender - INFO - Resetting view
+2025-01-05 15:17:37,442 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 15:17:37,443 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 15:17:37,443 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 15:17:43,799 - MiniRayRender - INFO - Generating shape #2: Sphere with size=1, color=(0.125490203499794, 1.0, 0.5176470875740051), texture=None
+2025-01-05 15:17:43,799 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 15:17:43,800 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 15:17:43,802 - MiniRayRender - INFO - Added shape: Sphere_2 to scene
+2025-01-05 15:17:55,541 - MiniRayRender - INFO - Generating shape #3: Cuboid with size=2, color=(0.6509804129600525, 0.7254902124404907, 1.0), texture=None
+2025-01-05 15:17:55,542 - MiniRayRender - INFO - Generating shape: Cuboid with size=2
+2025-01-05 15:17:55,542 - MiniRayRender - INFO - Generating cuboid with width=2, height=2, depth=2
+2025-01-05 15:17:55,542 - MiniRayRender - INFO - Added shape: Cuboid_3 to scene
+2025-01-05 15:18:12,209 - MiniRayRender - INFO - Generating shape #4: Cuboid with size=3, color=None, texture=E:/Documents/北航本科/大二/计算机图形学/大作业/earthmap.jpg
+2025-01-05 15:18:12,209 - MiniRayRender - INFO - Generating shape: Cuboid with size=3
+2025-01-05 15:18:12,210 - MiniRayRender - INFO - Generating cuboid with width=3, height=3, depth=3
+2025-01-05 15:18:12,210 - MiniRayRender - INFO - Added shape: Cuboid_4 to scene
+2025-01-05 15:19:45,641 - MiniRayRender - INFO - Resetting view
+2025-01-05 17:53:30,826 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 17:53:30,827 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 17:53:30,827 - MiniRayRender - INFO - Generating plane with size=16
+2025-01-05 17:57:49,664 - MiniRayRender - INFO - Generating shape #1: Plane with size=16, color=None, texture=chessboard.jpg
+2025-01-05 17:57:49,664 - MiniRayRender - INFO - Generating shape: Plane with size=16
+2025-01-05 17:57:49,664 - MiniRayRender - INFO - Generating plane with size=16

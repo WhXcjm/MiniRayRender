@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
             self.preview.start_rotation()  # 开始旋转
             self.rotate_button.setText("Stop Rotation")  # 更新按钮文本
         self.is_rotating = not self.is_rotating
-
+    
     def add_object(self, obj):
         """
         添加物体到场景
@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         重置预览窗口的视图
         """
         logger.info("Resetting view")
+        self.rotate_button.setText("Stop Rotation")  # 更新按钮文本
         self.preview.reset_view()
 
     def render_scene(self):
@@ -172,8 +173,9 @@ class MainWindow(QMainWindow):
             shape_data = add_shape_to_scene(shape_name, size, color, texture)
 
             # 将生成的形状添加到场景中
-            self.scene_objects.append(shape_data)
+            self.add_object(shape_data)
 
             # 更新预览
             self.preview.update_objects(self.scene_objects)
-            logger.info(f"Added shape: {shape_name} to scene")
+            name = shape_data["name"]
+            logger.info(f"Added shape: {name} to scene")

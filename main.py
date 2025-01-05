@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 11:19:26
+LastEditTime: 2025-01-05 14:24:13
 FilePath: \大作业\main.py
 Description: 
 
@@ -13,6 +13,7 @@ import sys, glm
 import numpy as np
 from PySide6.QtWidgets import QApplication
 from gui.main_window import MainWindow
+from model.add_shape import *
 
 def main():
     """
@@ -22,35 +23,13 @@ def main():
     app = QApplication(sys.argv)
 
     # 初始化主窗口
+    camera = glm.vec3(0, 10, 20)
     main_window = MainWindow(
-        view = glm.lookAt(glm.vec3(0, 10, 20), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)),
-        light_pos = glm.vec3(-2, 10, -5)
+        view = glm.lookAt(camera, glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)),
+        light_pos = glm.vec3(-2, 10, 5)
     )
     # 加地平面棋盘
-    size = 8
-    vertices = np.array([
-        [-size, 0, -size], [size, 0, -size],
-        [-size, 0, size], [size, 0, size]
-    ], dtype=np.float32)
-    normals = np.array([
-        [0, 1, 0], [0, 1, 0], [0, 1, 0],
-        [0, 1, 0]
-    ], dtype=np.float32)
-    indices = np.array([0, 1, 2, 1, 2, 3], dtype=np.uint32)
-    texcoords = np.array([
-        [0, 0], [1, 0],
-        [0, 1], [1, 1],
-    ], dtype=np.float32)
-    main_window.add_object({
-        "name": "chessboard",
-        "vertices": vertices,
-        "normals": normals,
-        "indices": indices,
-        "texcoords": texcoords,
-        "texture": "chessboard.jpg",
-        # "color": [0.5, 0.5, 0.5],
-        "transform": glm.mat4(1.0)
-    })
+    main_window.add_object(add_shape_to_scene("Plane", 16, texture="chessboard.jpg"))
     main_window.show()
 
     # 进入主事件循环

@@ -264,6 +264,16 @@ class PreviewWidget(QOpenGLWidget):
         self.is_rotating = False
         self.rotation_timer.stop()
 
+    def reset_view(self):
+        """
+        重置视图
+        """
+        self.stop_rotation()
+        self.rotation_angle = 0.0
+        self.rotated_view = self.view
+        self.fixed_light_pos = self.light_pos
+        self.update()
+
     def update_rotation(self):
         """
         更新旋转角度
