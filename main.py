@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 14:24:13
+LastEditTime: 2025-01-05 18:09:02
 FilePath: \大作业\main.py
 Description: 
 
@@ -29,7 +29,7 @@ def main():
         light_pos = glm.vec3(-2, 10, 5)
     )
     # 加地平面棋盘
-    main_window.add_object(add_shape_to_scene("Plane", 16, texture="chessboard.jpg"))
+    main_window.add_object(add_shape_to_scene("Plane", 16, texture="assets/chessboard.jpg"))
     main_window.show()
 
     # 进入主事件循环
