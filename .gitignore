@@ -1,0 +1,15 @@
+__pycache__/
+**/__pycache__/
+
+*.log
+gui/__pycache__/main_window.cpython-310.pyc
+gui/__pycache__/main_window.cpython-310.pyc
+gui/__pycache__/preview_widget.cpython-310.pyc
+minirayrender.log
+
+test.py
+*测试.py
+gui/__pycache__/main_window.cpython-310.pyc
+gui/__pycache__/preview_widget.cpython-310.pyc
+model/__pycache__/shape_generator.cpython-310.pyc
+model/__pycache__/

@@ -1,4 +1,5 @@
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtCore import QTimer
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import glm
@@ -11,12 +12,23 @@ class PreviewWidget(QOpenGLWidget):
     """
     负责渲染场景的 OpenGL Widget
     """
-    def __init__(self, parent=None):
+
+    def __init__(self, parent=None, light_pos=glm.vec3(-1.0, 3.0, -2.0), view=glm.lookAt(glm.vec3(0, 5, 10), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))):
         super().__init__(parent)
         self.shader_program = None
         self.object_list = []
-        self.light_pos = glm.vec3(-1.0, 3.0, -2.0)  # 默认光源位置
-        self.texture = None
+        self.light_pos = light_pos  # 默认光源位置
+        self.fixed_light_pos = light_pos  # 固定光源位置
+        self.view = view
+        self.rotated_view = view
+
+        self.is_rotating = False  # 默认不旋转
+        self.rotation_angle = 0.0  # 初始旋转角度
+        self.rotation_speed = 1.0  # 旋转速度
+
+        # 设置定时器用于更新旋转
+        self.rotation_timer = QTimer(self)
+        self.rotation_timer.timeout.connect(self.update_rotation)
 
     def initializeGL(self):
         """
@@ -32,11 +44,12 @@ class PreviewWidget(QOpenGLWidget):
         """
         计算模型-视图-投影矩阵
         """
-        proj = glm.perspective(glm.radians(60.0), self.width / self.height, 0.1, 100.0)
-        view = glm.lookAt(glm.vec3(0, 5, 10), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
+        proj = glm.perspective(glm.radians(
+            60.0), self.width / self.height, 0.1, 100.0)
+        view = self.rotated_view
         mvp = proj * view * transform
         return mvp
-    
+
     def resizeGL(self, width, height):
         """
         调整视口大小
@@ -54,9 +67,10 @@ class PreviewWidget(QOpenGLWidget):
 
         # 设置光源位置和颜色
         light_pos_loc = glGetUniformLocation(self.shader_program, "lightPos")
-        glUniform3f(light_pos_loc, *self.light_pos)
+        glUniform3f(light_pos_loc, *self.fixed_light_pos)
 
-        light_color_loc = glGetUniformLocation(self.shader_program, "lightColor")
+        light_color_loc = glGetUniformLocation(
+            self.shader_program, "lightColor")
         glUniform3f(light_color_loc, 1.0, 1.0, 1.0)  # 默认白光
 
         # 渲染物体列表
@@ -68,33 +82,38 @@ class PreviewWidget(QOpenGLWidget):
             texcoords = obj["texcoords"]
             transform = obj["transform"]
 
-            use_texture_loc = glGetUniformLocation(self.shader_program, "useTexture")
+            use_texture_loc = glGetUniformLocation(
+                self.shader_program, "useTexture")
             # 设置纹理或颜色
             if "texture" in obj:
                 img = Image.open(obj["texture"])
                 img_data = np.array(img, dtype=np.uint8)
 
-                self.texture = glGenTextures(1)
-                glBindTexture(GL_TEXTURE_2D, self.texture)
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img.width, img.height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
-                
+                texture = glGenTextures(1)
+                glBindTexture(GL_TEXTURE_2D, texture)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img.width,
+                             img.height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
+
                 glUniform1i(use_texture_loc, 1)
 
                 glGenerateMipmap(GL_TEXTURE_2D)
-                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
-                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+                glTexParameteri(
+                    GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+                glTexParameteri(
+                    GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
                 # 绑定纹理
                 glActiveTexture(GL_TEXTURE0 + texture_unit)
-                glBindTexture(GL_TEXTURE_2D, self.texture)
+                glBindTexture(GL_TEXTURE_2D, texture)
                 tex_loc = glGetUniformLocation(self.shader_program, "texture1")
                 glUniform1i(tex_loc, texture_unit)
                 texture_unit += 1  # 分配下一个纹理单元
             else:
                 glUniform1i(use_texture_loc, 0)
-                color_loc = glGetUniformLocation(self.shader_program, "objectColor")
+                color_loc = glGetUniformLocation(
+                    self.shader_program, "objectColor")
                 color = obj.get("color", (1.0, 1.0, 1.0))  # 默认白色
                 glUniform3f(color_loc, *color)
 
@@ -108,20 +127,24 @@ class PreviewWidget(QOpenGLWidget):
             data = np.hstack((vertices, normals, texcoords)).astype(np.float32)
             glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
 
+            # 配置顶点属性
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                                  8 * 4, ctypes.c_void_p(0))
+            glEnableVertexAttribArray(0)
+
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                                  8 * 4, ctypes.c_void_p(12))
+            glEnableVertexAttribArray(1)
+
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                                  8 * 4, ctypes.c_void_p(24))
+            glEnableVertexAttribArray(2)
+
             # 创建 EBO 并上传索引数据
             EBO = glGenBuffers(1)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
-
-            # 配置顶点属性
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(0))
-            glEnableVertexAttribArray(0)
-
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(12))
-            glEnableVertexAttribArray(1)
-
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * 4, ctypes.c_void_p(24))
-            glEnableVertexAttribArray(2)
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                         indices.nbytes, indices, GL_STATIC_DRAW)
 
             # 设置着色器中的 uniform
             mvp_loc = glGetUniformLocation(self.shader_program, "MVP")
@@ -129,10 +152,11 @@ class PreviewWidget(QOpenGLWidget):
 
             mvp = self.calculate_mvp(transform)
             glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, glm.value_ptr(mvp))
-            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm.value_ptr(transform))
+            glUniformMatrix4fv(model_loc, 1, GL_FALSE,
+                               glm.value_ptr(transform))
 
             # 绘制
-            glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, None)
+            glDrawElements(GL_TRIANGLES, 3 * len(indices), GL_UNSIGNED_INT, None)
 
             # 清理 VAO 和 VBO
             glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -226,6 +250,37 @@ class PreviewWidget(QOpenGLWidget):
 
         return program
 
+    def start_rotation(self):
+        """
+        启动旋转
+        """
+        self.is_rotating = True
+        self.rotation_timer.start(10)  # 每10ms更新一次，约100帧每秒
+
+    def stop_rotation(self):
+        """
+        停止旋转
+        """
+        self.is_rotating = False
+        self.rotation_timer.stop()
+
+    def update_rotation(self):
+        """
+        更新旋转角度
+        """
+        if self.is_rotating:
+            self.rotation_angle += self.rotation_speed
+            if self.rotation_angle >= 360.0:
+                self.rotation_angle -= 360.0
+            self.rotated_view = glm.rotate(
+                self.view, glm.radians(self.rotation_angle), glm.vec3(0, 1, 0))
+            self.fixed_light_pos = glm.rotate(
+                self.light_pos, glm.radians(-self.rotation_angle), glm.vec3(0, 1, 0))
+            self.update()  # 强制刷新重绘
+
+# __name__ = "__main__"
+
+
 def generate_plane(size=5.0):
     vertices = np.array([
         [-size, 0, -size], [size, 0, -size],
@@ -252,6 +307,7 @@ def generate_plane(size=5.0):
         "texture": "chessboard.jpg",
         "transform": glm.mat4(1.0)
     }
+
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication, QMainWindow

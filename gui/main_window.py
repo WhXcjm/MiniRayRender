@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QColorDialog
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QColorDialog, QDialog
 from gui.preview_widget import PreviewWidget
 from model.shape_generator import ShapeGenerator
+from model.add_shape import AddShapeDialog, add_shape_to_scene
 from utils.logger import logger
 import glm
 import numpy as np
@@ -12,7 +13,7 @@ class MainWindow(QMainWindow):
     """
     主窗口，包含左侧预览窗格和右侧功能列表。
     """
-    def __init__(self):
+    def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), view = glm.lookAt(glm.vec3(0, 5, 10), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))):
         super().__init__()
         self.setWindowTitle("MiniRayRender")
         self.setGeometry(100, 100, 1200, 800)
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         main_layout = QHBoxLayout()
 
         # 左侧预览窗格
-        self.preview = PreviewWidget()
+        self.preview = PreviewWidget(light_pos=light_pos, view=view)
         main_layout.addWidget(self.preview, 5)
 
         # 右侧功能区
@@ -42,10 +43,12 @@ class MainWindow(QMainWindow):
         self.reset_button = QPushButton("Reset View")
         self.render_button = QPushButton("Render")
         self.add_shape_button = QPushButton("Add Shape")
+        self.rotate_button = QPushButton("Start Rotation")
 
         right_layout.addWidget(self.add_shape_button)
         right_layout.addWidget(self.import_button)
         right_layout.addWidget(self.export_button)
+        right_layout.addWidget(self.rotate_button)
         right_layout.addWidget(self.reset_button)
         right_layout.addWidget(self.render_button)
 
@@ -65,11 +68,14 @@ class MainWindow(QMainWindow):
         self.reset_button.clicked.connect(self.reset_view)
         self.render_button.clicked.connect(self.render_scene)
         self.add_shape_button.clicked.connect(self.add_shape)
+        self.rotate_button.clicked.connect(self.toggle_rotation)
 
-        # 初始化默认物体列表（包含地平面）
+        # 初始化物体列表
         self.scene_objects = []
         self.update_object_list()
         self.preview.update_objects(self.scene_objects)
+
+        self.is_rotating = False  # 旋转状态
 
     def update_object_list(self):
         """
@@ -85,6 +91,18 @@ class MainWindow(QMainWindow):
             appearance =f"Texture: \"{obj['texture']}\"" if "texture" in obj else f"Color: {obj['color']}"
             self.object_list.setItem(row, 2, QTableWidgetItem(appearance))
         self.preview.update_objects(self.scene_objects)
+
+    def toggle_rotation(self):
+        """
+        切换旋转状态，开始或停止旋转
+        """
+        if self.is_rotating:
+            self.preview.stop_rotation()  # 停止旋转
+            self.rotate_button.setText("Start Rotation")  # 更新按钮文本
+        else:
+            self.preview.start_rotation()  # 开始旋转
+            self.rotate_button.setText("Stop Rotation")  # 更新按钮文本
+        self.is_rotating = not self.is_rotating
 
     def add_object(self, obj):
         """
@@ -143,54 +161,19 @@ class MainWindow(QMainWindow):
         self.preview.start_render()
 
     def add_shape(self):
-        """
-        添加基本形状到场景
-        """
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QComboBox, QSpinBox, QPushButton
-
-        class AddShapeDialog(QDialog):
-            def __init__(self):
-                super().__init__()
-                self.setWindowTitle("Add Shape")
-
-                layout = QVBoxLayout()
-                self.shape_selector = QComboBox()
-                self.shape_selector.addItems(["Sphere", "Cuboid", "Plane"])
-                layout.addWidget(self.shape_selector)
-
-                self.size_input = QSpinBox()
-                self.size_input.setRange(1, 100)
-                self.size_input.setValue(10)
-                layout.addWidget(self.size_input)
-
-                self.color_button = QPushButton("Select Color")
-                self.color_button.clicked.connect(self.select_color)
-                self.color = None
-                layout.addWidget(self.color_button)
-
-                self.add_button = QPushButton("Add")
-                layout.addWidget(self.add_button)
-
-                self.setLayout(layout)
-                self.add_button.clicked.connect(self.accept)
-
-            def select_color(self):
-                color = QColorDialog.getColor()
-                if color.isValid():
-                    self.color = color.getRgbF()[:3]
-
-            def get_shape(self):
-                return self.shape_selector.currentText(), self.size_input.value(), self.color
-
         dialog = AddShapeDialog()
-        if dialog.exec_():
-            shape, size, color = dialog.get_shape()
-            vertices, faces = ShapeGenerator.generate_shape(shape, size)
-            self.scene_objects.append({
-                "name": shape,
-                "vertices": vertices,
-                "transform": glm.mat4(1.0),
-                "color": color or (1.0, 1.0, 1.0)  # 默认白色
-            })
-            self.update_object_list()
-            logger.info(f"Added new shape: {shape} with size {size} and color {color}")
+        if dialog.exec() == QDialog.Accepted:
+            shape_name = dialog.shape_selector.currentText()
+            size = dialog.size_input.value()
+            color = dialog.color
+            texture = dialog.texture
+
+            # 使用 `add_shape_to_scene` 生成形状数据
+            shape_data = add_shape_to_scene(shape_name, size, color, texture)
+
+            # 将生成的形状添加到场景中
+            self.scene_objects.append(shape_data)
+
+            # 更新预览
+            self.preview.update_objects(self.scene_objects)
+            logger.info(f"Added shape: {shape_name} to scene")

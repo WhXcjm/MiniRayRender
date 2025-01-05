@@ -16,7 +16,7 @@ class PreviewWidget(QOpenGLWidget):
         super().__init__(parent)
         self.shader_program = None
         self.object_list = []
-        self.light_pos = glm.vec3(-1.0, 3.0, -2.0)  # 默认光源位置
+        self.light_pos = glm.vec3(-10.0, 40.0, -20.0)  # 默认光源位置
         self.texture = None
 
     def initializeGL(self):

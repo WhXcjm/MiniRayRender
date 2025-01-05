@@ -1,98 +1,44 @@
-2025-01-04 15:20:23,184 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:20:23,184 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:20:23,184 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:20:23,185 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:20:23,185 - MiniRayRender - INFO - Successfully generated shape: Sphere with size 10
-2025-01-04 15:20:37,241 - MiniRayRender - INFO - User selected shape: Sphere, size: 6
-2025-01-04 15:20:37,241 - MiniRayRender - INFO - Generating shape: Sphere with size=6
-2025-01-04 15:20:37,258 - MiniRayRender - INFO - Generating sphere with radius=6, segments=16, rings=16
-2025-01-04 15:20:37,258 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:20:37,259 - MiniRayRender - INFO - Successfully generated shape: Sphere with size 6
-2025-01-04 15:22:12,479 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:22:12,479 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:22:12,480 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:22:12,480 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:22:12,481 - MiniRayRender - INFO - Successfully generated shape: Sphere with size 10
-2025-01-04 15:28:29,771 - MiniRayRender - INFO - User selected shape: Sphere, size: 14
-2025-01-04 15:28:29,771 - MiniRayRender - INFO - Generating shape: Sphere with size=14
-2025-01-04 15:28:29,771 - MiniRayRender - INFO - Generating sphere with radius=14, segments=16, rings=16
-2025-01-04 15:28:29,787 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:28:29,787 - MiniRayRender - INFO - Successfully generated shape: Sphere with size 14
-2025-01-04 15:28:29,787 - MiniRayRender - ERROR - Failed to generate shape Sphere: 'PreviewWidget' object has no attribute 'add_object_to_preview'
-2025-01-04 15:38:08,137 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:38:08,137 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:38:08,138 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:38:08,138 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:38:08,139 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 15:38:10,727 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:38:10,727 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:38:10,727 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:38:10,727 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:38:10,727 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 15:38:23,166 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:38:23,166 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:38:23,166 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:38:23,166 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:38:23,166 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 15:43:23,993 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:43:36,265 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:43:41,759 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:43:59,451 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:46:29,824 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:46:31,807 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:46:33,220 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:46:37,356 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:47:50,674 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 15:53:45,111 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 15:53:45,111 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 15:53:45,111 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 15:53:45,111 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 15:53:45,111 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 16:02:50,909 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 16:02:50,909 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:02:50,909 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:02:50,909 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:02:50,909 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 16:02:52,429 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 16:02:52,445 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:02:52,445 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:02:52,445 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:02:52,445 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 16:02:55,603 - MiniRayRender - INFO - User selected shape: Cuboid, size: 10
-2025-01-04 16:02:55,603 - MiniRayRender - INFO - Generating shape: Cuboid with size=10
-2025-01-04 16:02:55,603 - MiniRayRender - INFO - Generating cuboid with width=10, height=10, depth=10
-2025-01-04 16:02:55,603 - MiniRayRender - INFO - Cuboid generated: 8 vertices, 12 faces
-2025-01-04 16:02:55,603 - MiniRayRender - INFO - Successfully added shape: Cuboid with size 10
-2025-01-04 16:02:57,516 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 16:02:57,516 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:02:57,528 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:02:57,528 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:02:57,528 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 16:09:16,427 - MiniRayRender - INFO - User selected shape: Sphere, size: 10
-2025-01-04 16:09:16,428 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:09:16,429 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:09:16,429 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:09:16,429 - MiniRayRender - INFO - Successfully added shape: Sphere with size 10
-2025-01-04 16:20:10,084 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:20:10,084 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:20:10,084 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:20:10,084 - MiniRayRender - INFO - Added new shape: Sphere with size 10 and color (1.0, 0.062745101749897, 0.545098066329956)
-2025-01-04 16:21:41,283 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:21:41,283 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:21:41,283 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:22:03,110 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:22:03,110 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:22:03,110 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:22:03,125 - MiniRayRender - INFO - Added new shape: Sphere with size 10 and color (0.6470588445663452, 1.0, 0.729411780834198)
-2025-01-04 16:29:26,372 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 16:29:26,372 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 16:29:26,372 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 16:29:26,372 - MiniRayRender - INFO - Added new shape: Sphere with size 10 and color None
-2025-01-04 21:13:34,212 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 21:13:34,212 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 21:13:34,212 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 21:13:34,212 - MiniRayRender - INFO - Added new shape: Sphere with size 10 and color (0.34117648005485535, 1.0, 0.239215686917305)
-2025-01-04 21:27:36,397 - MiniRayRender - INFO - Generating shape: Sphere with size=10
-2025-01-04 21:27:36,397 - MiniRayRender - INFO - Generating sphere with radius=10, segments=16, rings=16
-2025-01-04 21:27:36,397 - MiniRayRender - INFO - Sphere generated: 289 vertices, 512 faces
-2025-01-04 21:27:36,397 - MiniRayRender - INFO - Added new shape: Sphere with size 10 and color (0.4313725531101227, 0.3803921639919281, 1.0)
+2025-01-05 12:27:22,469 - MiniRayRender - INFO - Generating shape: Sphere with size=10, color=(1.0, 0.0, 0.01568627543747425), texture=None
+2025-01-05 12:27:22,469 - MiniRayRender - INFO - Generating shape: Sphere with size=10
+2025-01-05 12:27:22,469 - MiniRayRender - INFO - Generating sphere with radius=10, segments=32, rings=32
+2025-01-05 12:27:22,472 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 12:28:49,400 - MiniRayRender - INFO - Generating shape: Sphere with size=10, color=(1.0, 0.0, 0.01568627543747425), texture=None
+2025-01-05 12:28:49,400 - MiniRayRender - INFO - Generating shape: Sphere with size=10
+2025-01-05 12:28:49,401 - MiniRayRender - INFO - Generating sphere with radius=10, segments=32, rings=32
+2025-01-05 12:28:49,403 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 12:31:16,164 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(1.0, 0.0, 0.01568627543747425), texture=None
+2025-01-05 12:31:16,165 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 12:31:16,165 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 12:31:16,167 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 12:31:45,565 - MiniRayRender - INFO - Generating shape: Cuboid with size=2, color=(1.0, 0.0, 0.01568627543747425), texture=None
+2025-01-05 12:31:45,565 - MiniRayRender - INFO - Generating shape: Cuboid with size=2
+2025-01-05 12:31:45,566 - MiniRayRender - INFO - Generating cuboid with width=2, height=2, depth=2
+2025-01-05 12:31:45,566 - MiniRayRender - INFO - Added shape: Cuboid to scene
+2025-01-05 12:34:16,292 - MiniRayRender - INFO - Generating shape: Cuboid with size=1, color=(0.3450980484485626, 1.0, 0.5843137502670288), texture=None
+2025-01-05 12:34:16,292 - MiniRayRender - INFO - Generating shape: Cuboid with size=1
+2025-01-05 12:34:16,293 - MiniRayRender - INFO - Generating cuboid with width=1, height=1, depth=1
+2025-01-05 12:34:16,293 - MiniRayRender - INFO - Added shape: Cuboid to scene
+2025-01-05 12:46:24,842 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(1.0, 0.14901961386203766, 0.3490196168422699), texture=None
+2025-01-05 12:46:24,842 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 12:46:24,843 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 12:46:24,845 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:03:19,180 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(1.0, 0.3333333432674408, 0.800000011920929), texture=None
+2025-01-05 13:03:19,180 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 13:03:19,180 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 13:03:19,183 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:08:40,196 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(0.09803921729326248, 1.0, 0.6980392336845398), texture=None
+2025-01-05 13:08:40,196 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 13:08:40,197 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 13:08:40,199 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:18:43,842 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(0.250980406999588, 0.5490196347236633, 1.0), texture=None
+2025-01-05 13:18:43,842 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 13:18:43,842 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 13:18:43,844 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:19:34,426 - MiniRayRender - INFO - Generating shape: Sphere with size=1, color=(0.9019607901573181, 1.0, 0.26274511218070984), texture=None
+2025-01-05 13:19:34,426 - MiniRayRender - INFO - Generating shape: Sphere with size=1
+2025-01-05 13:19:34,426 - MiniRayRender - INFO - Generating sphere with radius=1, segments=32, rings=32
+2025-01-05 13:19:34,429 - MiniRayRender - INFO - Added shape: Sphere to scene
+2025-01-05 13:19:41,277 - MiniRayRender - INFO - Generating shape: Sphere with size=2, color=None, texture=E:/Documents/北航本科/大二/计算机图形学/大作业/earthmap.jpg
+2025-01-05 13:19:41,277 - MiniRayRender - INFO - Generating shape: Sphere with size=2
+2025-01-05 13:19:41,278 - MiniRayRender - INFO - Generating sphere with radius=2, segments=32, rings=32
+2025-01-05 13:19:41,280 - MiniRayRender - INFO - Added shape: Sphere to scene

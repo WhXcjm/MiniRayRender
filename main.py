@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-04 16:06:07
+LastEditTime: 2025-01-05 11:19:26
 FilePath: \大作业\main.py
 Description: 
 
@@ -22,7 +22,10 @@ def main():
     app = QApplication(sys.argv)
 
     # 初始化主窗口
-    main_window = MainWindow()
+    main_window = MainWindow(
+        view = glm.lookAt(glm.vec3(0, 10, 20), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)),
+        light_pos = glm.vec3(-2, 10, -5)
+    )
     # 加地平面棋盘
     size = 8
     vertices = np.array([
