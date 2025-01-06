@@ -229,7 +229,7 @@ class PreviewWidget(QOpenGLWidget):
 
         void main() {
             // 环境光
-            float ambientStrength = 0.2;
+            float ambientStrength = 0.4;
             vec3 ambient = ambientStrength * lightColor;
 
             // 漫反射
@@ -239,7 +239,7 @@ class PreviewWidget(QOpenGLWidget):
             vec3 diffuse = diff * lightColor;
 
             // 镜面反射 (Blinn-Phong 模型)
-            float specularStrength = 0.5;
+            float specularStrength = 0.3;
             float shininess = 8.0;  // 可调节的高光度（越大，反射越小）
             
             // 计算视角方向（从片段指向观察者）
