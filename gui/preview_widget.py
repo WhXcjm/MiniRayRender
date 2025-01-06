@@ -82,6 +82,10 @@ class PreviewWidget(QOpenGLWidget):
             self.shader_program, "lightColor")
         glUniform3f(light_color_loc, 1.0, 1.0, 1.0)  # 默认白光
 
+        # 设置观察者位置（eye）
+        view_pos_loc = glGetUniformLocation(self.shader_program, "viewPos")
+        glUniform3f(view_pos_loc, *self.eye)
+        
         # 渲染物体列表
         texture_unit = 0  # 初始化纹理单元计数
         for obj in self.object_list:
@@ -219,12 +223,13 @@ class PreviewWidget(QOpenGLWidget):
         uniform vec3 objectColor;     // 对象颜色
         uniform sampler2D texture1;   // 主纹理
         uniform bool useTexture;      // 是否使用纹理
+        uniform vec3 viewPos;         // 观察者位置
 
         out vec4 FragColor;
 
         void main() {
             // 环境光
-            float ambientStrength = 0.1;
+            float ambientStrength = 0.2;
             vec3 ambient = ambientStrength * lightColor;
 
             // 漫反射
@@ -235,9 +240,16 @@ class PreviewWidget(QOpenGLWidget):
 
             // 镜面反射 (Blinn-Phong 模型)
             float specularStrength = 0.5;
-            vec3 viewDir = normalize(-FragPos); // 假设观察者在 (0, 0, 0)
+            float shininess = 8.0;  // 可调节的高光度（越大，反射越小）
+            
+            // 计算视角方向（从片段指向观察者）
+            vec3 viewDir = normalize(viewPos - FragPos); 
+
+            // Blinn-Phong模型：halfDir 是视角方向和光照方向的中间方向
             vec3 halfDir = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(norm, halfDir), 0.0), 32);
+            
+            // 计算镜面反射分量
+            float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
             vec3 specular = specularStrength * spec * lightColor;
 
             // 最终光照结果
@@ -249,7 +261,6 @@ class PreviewWidget(QOpenGLWidget):
 
             FragColor = vec4(finalColor * lighting, 1.0);
         }
-
         """
 
         # 编译着色器

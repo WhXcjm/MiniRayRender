@@ -22,7 +22,7 @@ class ShapeGenerator:
                 z = radius * math.sin(phi) * math.sin(theta)
                 vertices.append((x, y, z))
                 normals.append((x / radius, y / radius, z / radius))
-                texcoords.append((j / segments, i / rings))
+                texcoords.append((1 - j / segments, i / rings))
 
         for i in range(rings):
             for j in range(segments):
