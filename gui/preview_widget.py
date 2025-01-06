@@ -1,34 +1,43 @@
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from PySide6.QtCore import QTimer
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtCore import Qt, QTimer, QPoint
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import glm
 import numpy as np
 from OpenGL.GL import shaders
 from PIL import Image
+from utils.logger import logger
 
 
 class PreviewWidget(QOpenGLWidget):
     """
     负责渲染场景的 OpenGL Widget
     """
-
-    def __init__(self, parent=None, light_pos=glm.vec3(-1.0, 3.0, -2.0), view=glm.lookAt(glm.vec3(0, 5, 10), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))):
+    def __init__(self, parent=None, light_pos=glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0),):
         super().__init__(parent)
         self.shader_program = None
         self.object_list = []
         self.light_pos = light_pos  # 默认光源位置
         self.fixed_light_pos = light_pos  # 固定光源位置
-        self.view = view
-        self.rotated_view = view
+
+        self.auto_eye = self.original_eye = self.last_eye = self.eye = eye
+        self.original_center = self.last_center = self.center = center
+        self.view = glm.lookAt(eye, center, glm.vec3(0, 1, 0))  # 默认视图矩阵
 
         self.is_rotating = False  # 默认不旋转
-        self.rotation_angle = 0.0  # 初始旋转角度
-        self.rotation_speed = 1.0  # 旋转速度
+        self.auto_rotation_angle = 0.0  # 初始旋转角度
+        self.auto_rotation_speed = 0.6  # 旋转速度
 
         # 设置定时器用于更新旋转
         self.rotation_timer = QTimer(self)
-        self.rotation_timer.timeout.connect(self.update_rotation)
+        self.rotation_timer.timeout.connect(self.update_auto_rotation)
+
+        self.is_dragging = False  # 鼠标拖拽状态
+        self.last_mouse_pos = QPoint()  # 上一次鼠标位置
+        self.rotation_speed = 0.3  # 旋转灵敏度
+        self.translation_speed = 0.045  # 平移灵敏度
+        self.scale_factor = 1.1  # 缩放灵敏度
 
     def initializeGL(self):
         """
@@ -46,7 +55,7 @@ class PreviewWidget(QOpenGLWidget):
         """
         proj = glm.perspective(glm.radians(
             60.0), self.width / self.height, 0.1, 100.0)
-        view = self.rotated_view
+        view = self.view
         mvp = proj * view * transform
         return mvp
 
@@ -171,7 +180,7 @@ class PreviewWidget(QOpenGLWidget):
         更新物体列表并重新渲染
         """
         self.object_list = objects
-        self.update()  # 触发重新渲染
+        self.update_view()  # 触发重新渲染
 
     def compile_shaders(self):
         """
@@ -269,28 +278,145 @@ class PreviewWidget(QOpenGLWidget):
         重置视图
         """
         self.stop_rotation()
-        self.rotation_angle = 0.0
-        self.rotated_view = self.view
+        self.auto_rotation_angle = 0.0
         self.fixed_light_pos = self.light_pos
-        self.update()
 
-    def update_rotation(self):
+        self.auto_eye = self.last_eye = self.eye = self.original_eye
+        self.last_center = self.center = self.original_center
+        self.view = glm.lookAt(self.eye, self.center, glm.vec3(0, 1, 0))
+
+        self.update_view()
+
+    def update_view(self):
+        # 水平旋转视角
+        horizontal_auto_rotation = glm.rotate(glm.mat4(1.0), glm.radians(self.auto_rotation_angle), glm.vec3(0.0, 1.0, 0.0))
+        self.auto_eye = self.center + glm.vec3(horizontal_auto_rotation * glm.vec4(self.eye - self.center, 1.0))
+
+        self.view = glm.lookAt(self.auto_eye, self.center, glm.vec3(0, 1, 0))
+        self.update()  # 强制刷新重绘
+
+    def update_auto_rotation(self):
         """
         更新旋转角度
         """
         if self.is_rotating:
-            self.rotation_angle += self.rotation_speed
-            if self.rotation_angle >= 360.0:
-                self.rotation_angle -= 360.0
-            self.rotated_view = glm.rotate(
-                self.view, glm.radians(self.rotation_angle), glm.vec3(0, 1, 0))
-            self.fixed_light_pos = glm.rotate(
-                self.light_pos, glm.radians(-self.rotation_angle), glm.vec3(0, 1, 0))
-            self.update()  # 强制刷新重绘
+            self.auto_rotation_angle += self.auto_rotation_speed
+        if self.auto_rotation_angle >= 360.0:
+            self.auto_rotation_angle -= 360.0 
+        self.update_view()
+
+    def mousePressEvent(self, event: QMouseEvent):
+        """
+        捕获鼠标按下事件。
+        """
+        logger.info(f"Mouse {'left' if event.button() == Qt.LeftButton else 'right'} button pressed at {event.pos()}")
+        if event.button() == Qt.LeftButton or event.button() == Qt.RightButton:
+            self.is_dragging = True
+            self.last_mouse_pos = event.pos()
+            self.last_eye = self.eye
+            self.last_center = self.center
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        """
+        捕获鼠标移动事件，执行旋转或平移。
+        """
+        logger.debug(f"Mouse moved to {event.pos()}")
+        if not self.is_dragging:
+            return
+
+        current_mouse_pos = event.pos()
+        delta = current_mouse_pos - self.last_mouse_pos  # 鼠标移动增量
+
+        if event.buttons() & Qt.LeftButton:  # 左键拖动，旋转
+            self.rotate_view(delta)
+
+        elif event.buttons() & Qt.RightButton:  # 右键拖动，平移
+            self.translate_view(delta)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """
+        捕获鼠标释放事件。
+        """
+        logger.info(f"Mouse {'left' if event.button() == Qt.LeftButton else 'right'} button released at {event.pos()}")
+        if event.button() == Qt.LeftButton or event.button() == Qt.RightButton:
+            self.is_dragging = False
+        
+    def wheelEvent(self, event):
+        """
+        捕获滚轮事件，调节 eye 和 center 之间的距离来实现缩放。
+        """
+        # 获取滚轮的增量，滚动向上为正，向下为负
+        delta = event.angleDelta().y()
+
+        # 获取 eye 和 center 之间的距离
+        direction = self.eye - self.center
+        distance = glm.length(direction)
+
+        # 缩放因子：每次滚动增加/减少一定比例
+        scale_factor = 1.1  # 比例因子
+
+        if delta > 0:
+            # 缩小：eye 离 center 更近
+            new_distance = distance / scale_factor
+        else:
+            # 放大：eye 离 center 更远
+            new_distance = distance * scale_factor
+
+        # 更新 eye 的位置
+        direction_normalized = glm.normalize(direction)
+        self.eye = self.center + direction_normalized * new_distance
+
+        self.update_view()
+
+    def rotate_view(self, delta):
+        angle_x = -delta.x() * self.rotation_speed * self.width / self.height
+        angle_y = delta.y() * self.rotation_speed * self.width / self.height
+
+        direction = self.last_eye - self.center
+
+        # 计算水平旋转（绕 Y 轴）
+        horizontal_rotation = glm.rotate(glm.mat4(1.0), glm.radians(angle_x), glm.vec3(0.0, 1.0, 0.0))
+        direction = glm.vec3(horizontal_rotation * glm.vec4(direction, 1.0))  # 更新方向
+
+        # 计算垂直旋转（绕 direction 与 up 的叉乘轴）
+        right = glm.normalize(glm.cross(direction, glm.vec3(0.0, 1.0, 0.0)))  # 计算旋转轴
+        vertical_rotation = glm.rotate(glm.mat4(1.0), glm.radians(angle_y), right)
+        direction = glm.vec3(vertical_rotation * glm.vec4(direction, 1.0))  # 更新方向
+
+        # 更新 eye 位置
+        self.eye = self.center + direction
+
+        self.update_view()
+
+    def translate_view(self, delta):
+        """
+        根据鼠标增量执行视图平移，平移 eye 和 center 在它们连线的垂直平面内。
+        """
+        translate_x = delta.x() * self.translation_speed * self.width / self.height
+        translate_y = delta.y() * self.translation_speed * self.width / self.height
+
+        # 计算 eye 和 center 之间的方向向量
+        direction = self.last_eye - self.last_center
+        # 计算水平方向（左右平移的方向）与视差向量的垂直方向
+        horizontal_auto_rotation = glm.rotate(glm.mat4(1.0), glm.radians(self.auto_rotation_angle), glm.vec3(0.0, 1.0, 0.0))
+        auto_rotated_direction = glm.vec3(horizontal_auto_rotation * glm.vec4(direction, 1.0))
+        right = glm.normalize(glm.cross(auto_rotated_direction, glm.vec3(0.0, 1.0, 0.0)))  # 右方向（视角平面内的垂直向量）
+        # 计算上下方向（平移垂直方向）与视差向量的垂直方向
+        up = glm.normalize(glm.cross(right, auto_rotated_direction))  # 上方向
+
+        # 水平平移：沿右方向平移 eye 和 center
+        horizontal_translation = right * translate_x
+        self.eye = self.last_eye + horizontal_translation
+        self.center = self.last_center + horizontal_translation
+
+        # 垂直平移：沿上方向平移 eye 和 center
+        vertical_translation = up * translate_y
+        self.eye = self.eye + vertical_translation
+        self.center = self.center +  vertical_translation
+
+        self.update_view()
 
 # __name__ = "__main__"
-
-
 def generate_plane(size=5.0):
     vertices = np.array([
         [-size, 0, -size], [size, 0, -size],

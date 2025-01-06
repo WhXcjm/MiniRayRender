@@ -3,7 +3,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 15:15:57
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-04 15:19:43
+LastEditTime: 2025-01-06 10:55:31
 FilePath: \\大作业\\utils\\logger.py
 Description: 
 
@@ -13,7 +13,7 @@ Github: https://github.com/WhXcjm
 import logging
 import sys
 
-def setup_logger(name="MiniRayRender", log_file="minirayrender.log", level=logging.INFO):
+def setup_logger(name="MiniRayRender", log_file="minirayrender.log", level=logging.DEBUG):
     """
     设置日志工具
     :param name: 日志记录器名称
@@ -42,5 +42,5 @@ def setup_logger(name="MiniRayRender", log_file="minirayrender.log", level=loggi
 
     return logger
 
-# 全局日志实例
+# 全局日志
 logger = setup_logger()

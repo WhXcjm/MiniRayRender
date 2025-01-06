@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 21:48:56
+LastEditTime: 2025-01-06 11:12:34
 FilePath: \大作业\main.py
 Description: 
 
@@ -25,7 +25,8 @@ def main():
     # 初始化主窗口
     camera = glm.vec3(0, 10, 20)
     main_window = MainWindow(
-        view = glm.lookAt(camera, glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)),
+        eye = camera,
+        center = glm.vec3(0, 0, 0),
         light_pos = glm.vec3(-2, 10, 5)
     )
     # 加地平面棋盘

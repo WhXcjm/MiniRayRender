@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
     """
     主窗口，包含左侧预览窗格和右侧功能列表。
     """
-    def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), view = glm.lookAt(glm.vec3(0, 5, 10), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))):
+    def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0)):
         super().__init__()
         self.setWindowTitle("MiniRayRender")
         self.setGeometry(100, 100, 1200, 800)
@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         main_layout = QHBoxLayout()
 
         # 左侧预览窗格
-        self.preview = PreviewWidget(light_pos=light_pos, view=view)
+        self.preview = PreviewWidget(light_pos=light_pos, eye=eye, center=center)
         main_layout.addWidget(self.preview, 5)
 
         # 右侧功能区

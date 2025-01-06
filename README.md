@@ -2,7 +2,7 @@
  * @Author: Wh_Xcjm
  * @Date: 2025-01-04 14:19:44
  * @LastEditor: Wh_Xcjm
- * @LastEditTime: 2025-01-06 10:28:41
+ * @LastEditTime: 2025-01-06 12:39:34
  * @FilePath: \大作业\README.md
  * @Description: 
  * 
@@ -18,5 +18,5 @@ To-do list：
 - [ ] import和export
 - [ ] 光线追踪融合【重点】
 - [x] 平移旋转物体 & 实时渲染
-- [ ] 平移旋转视图
+- [x] 平移旋转视图 & 与自动旋转耦合 & 实时渲染
 - [ ] 写报告【重点】
