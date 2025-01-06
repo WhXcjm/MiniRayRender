@@ -2,7 +2,7 @@
  * @Author: Wh_Xcjm
  * @Date: 2025-01-04 14:19:44
  * @LastEditor: Wh_Xcjm
- * @LastEditTime: 2025-01-04 14:19:44
+ * @LastEditTime: 2025-01-06 10:28:41
  * @FilePath: \大作业\README.md
  * @Description: 
  * 
@@ -12,3 +12,11 @@
 
 
 # 一个小型绘制系统
+
+To-do list：
+
+- [ ] import和export
+- [ ] 光线追踪融合【重点】
+- [x] 平移旋转物体 & 实时渲染
+- [ ] 平移旋转视图
+- [ ] 写报告【重点】

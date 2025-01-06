@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 22:25:51
+LastEditTime: 2025-01-06 10:17:22
 FilePath: \大作业\gui\main_window.py
 Description: 
 
@@ -122,44 +122,11 @@ class MainWindow(QMainWindow):
         obj["scale"] = glm.vec3(1.0, 1.0, 1.0) if "scale" not in obj else obj["scale"]
 
         # 创建并展示 TransformConfigDialog 对话框
-        dialog = TransformConfigDialog(
-            obj["name"],
-            translation=obj["translation"],
-            rotation=obj["rotation"],
-            scale=obj["scale"]
-        )
+        dialog = TransformConfigDialog(obj, callback=self.update_object_list, parent=self)
 
-        if dialog.exec() == QDialog.Accepted:
-            # 获取新的平移、旋转和缩放值
-            new_translation = glm.vec3(dialog.translation_x.value(), dialog.translation_y.value(), dialog.translation_z.value())
-            new_rotation = glm.vec3(dialog.rotation_x.value(), dialog.rotation_y.value(), dialog.rotation_z.value())
-            new_scale = glm.vec3(dialog.scale_x.value(), dialog.scale_y.value(), dialog.scale_z.value())
-
-            # 更新 obj 中的值
-            obj["translation"] = new_translation
-            obj["rotation"] = new_rotation
-            obj["scale"] = new_scale
-
-            # 使用新的平移、旋转和缩放值重新合成 transform
-            obj["transform"] = glm.mat4(1.0)  # 重置为单位矩阵
-
-            # 先缩放
-            obj["transform"] = glm.scale(obj["transform"], new_scale)
-
-            # 使用四元数进行旋转以避免万向锁问题
-            rotation_quaternion = glm.quat()
-            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.x), glm.vec3(1.0, 0.0, 0.0))  # 绕 X 轴旋转
-            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.y), glm.vec3(0.0, 1.0, 0.0))  # 绕 Y 轴旋转
-            rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.z), glm.vec3(0.0, 0.0, 1.0))  # 绕 Z 轴旋转
-
-            # 将旋转四元数转换为矩阵
-            obj["transform"] = obj["transform"] * glm.mat4_cast(rotation_quaternion)
-
-            # 最后平移
-            obj["transform"] = glm.translate(obj["transform"], new_translation)
-
-            # 更新物体列表
-            self.update_object_list()  # 更新列表与渲染
+        dialog.show()  # 阻塞直到对话框关闭
+        # if dialog.exec() == QDialog.Accepted:
+        #     self.update_object_list()  # 更新列表与渲染
             
     def toggle_rotation(self):
         """
@@ -231,12 +198,21 @@ class MainWindow(QMainWindow):
         self.preview.start_render()
 
     def add_shape(self):
-        dialog = AddShapeDialog()
-        if dialog.exec() == QDialog.Accepted:
-            shape_name = dialog.shape_selector.currentText()
-            size = dialog.size_input.value()
-            color = dialog.color
-            texture = dialog.texture
+        self.add_shape_dialog = AddShapeDialog(self)
+        self.add_shape_dialog.finished.connect(self.handle_add_shape_dialog_finished)
+        self.add_shape_dialog.show()
+        self.add_shape_button.setEnabled(False)
+    
+    def handle_add_shape_dialog_finished(self, result):
+        """
+        处理 AddShapeDialog 的完成事件。
+        """
+        if result == QDialog.Accepted:  # 用户点击 OK
+            # 获取对话框中的数据
+            shape_name = self.add_shape_dialog.shape_selector.currentText()
+            size = self.add_shape_dialog.size_input.value()
+            color = self.add_shape_dialog.color
+            texture = self.add_shape_dialog.texture
 
             # 使用 `add_shape_to_scene` 生成形状数据
             shape_data = add_shape_to_scene(shape_name, size, color, texture)
@@ -246,3 +222,7 @@ class MainWindow(QMainWindow):
 
             name = shape_data["name"]
             logger.info(f"Added shape: {name} to scene")
+
+        # 清理对话框引用（避免内存泄漏）
+        self.add_shape_dialog = None
+        self.add_shape_button.setEnabled(True)

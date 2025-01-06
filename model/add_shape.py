@@ -1,5 +1,5 @@
 # model/add_shape.py
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QComboBox, QSpinBox, QPushButton, QColorDialog, QFileDialog, QLineEdit
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton, QColorDialog, QFileDialog, QLineEdit
 from utils.logger import logger
 from .shape_generator import ShapeGenerator
 import sys
@@ -7,8 +7,8 @@ import sys
 class AddShapeDialog(QDialog):
     shape_id_counter = 0  # 维护一个全局的id计数器
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle("Add Shape")
 
         # 设置布局
@@ -20,7 +20,8 @@ class AddShapeDialog(QDialog):
         layout.addWidget(self.shape_selector)
 
         # 输入大小
-        self.size_input = QSpinBox()
+        self.size_input = QDoubleSpinBox()
+        self.size_input.setSingleStep(0.1)
         self.size_input.setRange(0.1, 10)
         self.size_input.setValue(1)
         layout.addWidget(self.size_input)
