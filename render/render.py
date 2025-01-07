@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-05 14:35:34
+LastEditTime: 2025-01-07 15:41:56
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -150,4 +150,4 @@ objects = [
 ]
 
 if __name__ == '__main__':
-    Render().run(objects, samples_per_pixel=4, output='image.png')
+    Render(width=200,height=200).run(objects, samples_per_pixel=2, output='image.png')

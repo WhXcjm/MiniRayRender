@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-06 10:17:22
+LastEditTime: 2025-01-07 22:40:55
 FilePath: \大作业\gui\main_window.py
 Description: 
 
@@ -10,6 +10,7 @@ Copyright (c) 2025 by WhXcjm, All Rights Reserved.
 Github: https://github.com/WhXcjm
 '''
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog
+from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 from gui.preview_widget import PreviewWidget
 from model.shape_generator import ShapeGenerator
@@ -29,6 +30,7 @@ class MainWindow(QMainWindow):
     def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0)):
         super().__init__()
         self.setWindowTitle("MiniRayRender")
+        self.setWindowIcon(QIcon("assets/icon.png"))
         self.setGeometry(100, 100, 1200, 800)
 
         # 主布局
@@ -97,8 +99,8 @@ class MainWindow(QMainWindow):
         for obj in self.scene_objects:
             row = self.object_list.rowCount()
             self.object_list.insertRow(row)
-            self.object_list.setItem(row, 0, QTableWidgetItem(obj["name"]))
-            appearance = f"Texture: \"{obj['texture']}\"" if "texture" in obj else f"Color: {obj['color']}"
+            self.object_list.setItem(row, 0, QTableWidgetItem(obj.name))
+            appearance = f"Texture: \"{obj.texture}\"" if obj.texture else f"Color: {obj.color}"
             item = QTableWidgetItem(appearance)
             item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             item.setToolTip(appearance)  # 鼠标悬停时显示完整内容
@@ -116,11 +118,6 @@ class MainWindow(QMainWindow):
         """
         显示平移、旋转和缩放设置对话框，并根据修改更新 transform。
         """
-        # 获取物体的当前平移、旋转和缩放值
-        obj["translation"] = glm.vec3(0.0) if "translation" not in obj else obj["translation"]
-        obj["rotation"] = glm.vec3(0.0) if "rotation" not in obj else obj["rotation"]
-        obj["scale"] = glm.vec3(1.0, 1.0, 1.0) if "scale" not in obj else obj["scale"]
-
         # 创建并展示 TransformConfigDialog 对话框
         dialog = TransformConfigDialog(obj, callback=self.update_object_list, parent=self)
 
@@ -215,12 +212,12 @@ class MainWindow(QMainWindow):
             texture = self.add_shape_dialog.texture
 
             # 使用 `add_shape_to_scene` 生成形状数据
-            shape_data = add_shape_to_scene(shape_name, size, color, texture)
+            obj = add_shape_to_scene(shape_name, size, color, texture)
 
             # 将生成的形状添加到场景中
-            self.add_object(shape_data)
+            self.add_object(obj)
 
-            name = shape_data["name"]
+            name = obj.name
             logger.info(f"Added shape: {name} to scene")
 
         # 清理对话框引用（避免内存泄漏）

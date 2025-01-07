@@ -2,6 +2,7 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton, QColorDialog, QFileDialog, QLineEdit
 from utils.logger import logger
 from .shape_generator import ShapeGenerator
+from model.objects import *
 import sys
 
 class AddShapeDialog(QDialog):
@@ -84,17 +85,17 @@ def add_shape_to_scene(shape_name, size, color=None, texture=None, name=None):
     """
     shape_id = AddShapeDialog().get_next_shape_id()  # 获取新的唯一id
     logger.info(f"Generating shape #{shape_id}: {shape_name} with size={size}, color={color}, texture={texture}")
-    shape_data = ShapeGenerator.generate_shape(shape_name, size)
-    shape_data["id"] = shape_id
-    shape_data["name"] = name if name else f"{shape_name}_{shape_id}"
+    obj = ShapeGenerator.generate_shape(shape_name, size)
+    obj.id = shape_id
+    obj.name = name if name else f"{shape_name}_{shape_id}"
 
     # 根据选择的颜色或纹理修改数据
     if color:
-        shape_data["color"] = color
+        obj.color = color
     elif texture:
-        shape_data["texture"] = texture
+        obj.texture = texture
 
-    return shape_data
+    return obj
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication

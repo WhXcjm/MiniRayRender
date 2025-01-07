@@ -1,15 +1,16 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QDoubleSpinBox, QLabel, QDialogButtonBox, QSlider
 from PySide6.QtCore import Qt
 from utils.logger import logger
+from model.objects import *
 import glm
 
 class TransformConfigDialog(QDialog):
-	def __init__(self, obj, callback, parent=None):
+	def __init__(self, obj: Object, callback, parent=None):
 		self.obj = obj
-		name = obj["name"]
-		translation = obj["translation"]
-		rotation = obj["rotation"]
-		scale = obj["scale"]
+		name = obj.name
+		translation = obj.translation
+		rotation = obj.rotation
+		scale = obj.scale
 
 		# 创建备份及回调
 		self.original_translation = glm.vec3(translation)
@@ -335,37 +336,6 @@ class TransformConfigDialog(QDialog):
 	def sync_scale_z_spinbox(self):
 		self.scale_z.setValue(self.scale_z_slider.value()/10)
 
-	def update_transform(self):
-		# 获取新的平移、旋转和缩放值
-		obj=self.obj
-
-		new_translation = glm.vec3(self.translation_x.value(), self.translation_y.value(), self.translation_z.value())
-		new_rotation = glm.vec3(self.rotation_x.value(), self.rotation_y.value(), self.rotation_z.value())
-		new_scale = glm.vec3(self.scale_x.value(), self.scale_y.value(), self.scale_z.value())
-
-		# 更新 obj 中的值
-		obj["translation"] = new_translation
-		obj["rotation"] = new_rotation
-		obj["scale"] = new_scale
-
-		# 使用新的平移、旋转和缩放值重新合成 transform
-		obj["transform"] = glm.mat4(1.0)  # 重置为单位矩阵
-
-		# 最后平移
-		obj["transform"] = glm.translate(obj["transform"], new_translation)
-
-		# 使用四元数进行旋转以避免万向锁问题
-		rotation_quaternion = glm.quat()
-		rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.x), glm.vec3(1.0, 0.0, 0.0))  # 绕 X 轴旋转
-		rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.y), glm.vec3(0.0, 1.0, 0.0))  # 绕 Y 轴旋转
-		rotation_quaternion = glm.rotate(rotation_quaternion, glm.radians(new_rotation.z), glm.vec3(0.0, 0.0, 1.0))  # 绕 Z 轴旋转
-
-		# 将旋转四元数转换为矩阵
-		obj["transform"] = obj["transform"] * glm.mat4_cast(rotation_quaternion)
-
-		# 先缩放
-		obj["transform"] = glm.scale(obj["transform"], new_scale)
-
 	def reset(self):
 		self.translation_x.setValue(0)
 		self.translation_y.setValue(0)
@@ -389,6 +359,20 @@ class TransformConfigDialog(QDialog):
 		self.scale_y.setValue(self.original_scale[1])
 		self.scale_z.setValue(self.original_scale[2])
 		self.update_view()
+
+	def update_transform(self):
+		# 获取新的平移、旋转和缩放值
+		obj=self.obj
+
+		new_translation = glm.vec3(self.translation_x.value(), self.translation_y.value(), self.translation_z.value())
+		new_rotation = glm.vec3(self.rotation_x.value(), self.rotation_y.value(), self.rotation_z.value())
+		new_scale = glm.vec3(self.scale_x.value(), self.scale_y.value(), self.scale_z.value())
+
+		# 更新 obj 中的值
+		obj.translation = new_translation
+		obj.rotation = new_rotation
+		obj.scale = new_scale
+		obj.update_transform()
 
 	def update_view(self):
 		self.update_transform()

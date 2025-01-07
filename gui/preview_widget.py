@@ -89,23 +89,28 @@ class PreviewWidget(QOpenGLWidget):
         # 渲染物体列表
         texture_unit = 0  # 初始化纹理单元计数
         for obj in self.object_list:
-            vertices = obj["vertices"]
-            normals = obj["normals"]
-            indices = obj["indices"]
-            texcoords = obj["texcoords"]
-            transform = obj["transform"]
+            vertices = obj.vertices
+            normals = obj.normals
+            indices = obj.indices
+            texcoords = obj.texcoords
+            transform = obj.transform
 
             use_texture_loc = glGetUniformLocation(
                 self.shader_program, "useTexture")
             # 设置纹理或颜色
-            if "texture" in obj:
-                img = Image.open(obj["texture"])
-                img_data = np.array(img, dtype=np.uint8)
+            if obj.texture:
+                if obj.texture_data is None:
+                    obj.texture_data = np.array(Image.open(obj.texture).convert('RGB'))
+                img_data = obj.texture_data
+                
+                # img_data = np.array(img, dtype=np.uint8)
+                # timg = Image.fromarray(img_data)
+                # timg.show()
+                # print(img_data)
 
                 texture = glGenTextures(1)
                 glBindTexture(GL_TEXTURE_2D, texture)
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img.width,
-                             img.height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_data.shape[1], img_data.shape[0], 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
 
                 glUniform1i(use_texture_loc, 1)
 
@@ -127,7 +132,7 @@ class PreviewWidget(QOpenGLWidget):
                 glUniform1i(use_texture_loc, 0)
                 color_loc = glGetUniformLocation(
                     self.shader_program, "objectColor")
-                color = obj.get("color", (1.0, 1.0, 1.0))  # 默认白色
+                color = obj.color  # 默认白色
                 glUniform3f(color_loc, *color)
 
             # 动态创建 VAO 和 VBO

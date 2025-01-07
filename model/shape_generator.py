@@ -1,5 +1,6 @@
 # model/shape_generator.py
 from utils.logger import logger
+from model.objects import *
 import numpy as np
 import math
 import glm
@@ -36,13 +37,7 @@ class ShapeGenerator:
         normals = np.array(normals, dtype=np.float32)
         texcoords = np.array(texcoords, dtype=np.float32)
 
-        return {
-            "vertices": vertices,
-            "normals": normals,
-            "indices": indices,
-            "texcoords": texcoords,
-            "transform": glm.mat4(1.0)
-        }
+        return Sphere(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords)
 
     @staticmethod
     def generate_cuboid(width=1.0, height=1.0, depth=1.0):
@@ -102,13 +97,7 @@ class ShapeGenerator:
         normals = np.array(normals, dtype=np.float32)
         texcoords = np.array(texcoords, dtype=np.float32)
 
-        return {
-            "vertices": vertices,
-            "normals": normals,
-            "indices": indices,
-            "texcoords": texcoords,
-            "transform": glm.mat4(1.0)
-        }
+        return Cuboid(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords)
 
 
     @staticmethod
@@ -138,13 +127,7 @@ class ShapeGenerator:
         normals = np.array(normals, dtype=np.float32)
         texcoords = np.array(texcoords, dtype=np.float32)
 
-        return {
-            "vertices": vertices,
-            "normals": normals,
-            "indices": indices,
-            "texcoords": texcoords,
-            "transform": glm.mat4(1.0)
-        }
+        return Plane(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords)
 
     @staticmethod
     def generate_shape(shape_name, size):
@@ -155,9 +138,9 @@ class ShapeGenerator:
         if shape_name == "Sphere":
             return ShapeGenerator.generate_sphere(radius=size)
         elif shape_name == "Cuboid":
-            return ShapeGenerator.generate_cuboid(width=size, height=size, depth=size)
+            return ShapeGenerator.generate_cuboid(width=size * 2, height=size * 2, depth=size * 2)
         elif shape_name == "Plane":
-            return ShapeGenerator.generate_plane(size=size)
+            return ShapeGenerator.generate_plane(size=size * 2)
         else:
             logger.error(f"Unknown shape: {shape_name}")
             raise ValueError(f"Unknown shape: {shape_name}")
