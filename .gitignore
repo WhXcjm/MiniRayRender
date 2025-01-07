@@ -2,5 +2,6 @@ __pycache__/
 test.py
 *测试.py
 *.pyc
-minirayrender.log
-*/utils/
+*.log
+*/*/
+image.png

@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-07 15:41:56
+LastEditTime: 2025-01-08 03:01:18
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -34,7 +34,7 @@ class VectorUtils:
         return refracted_direction
 
 class RayTracer:
-    def __init__(self, width, height, max_depth, camera, light, objects, screen):
+    def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen):
         self.width = width
         self.height = height
         self.max_depth = max_depth
@@ -44,59 +44,63 @@ class RayTracer:
         self.screen = screen
         self.image = np.zeros((height, width, 3))
 
-    def trace_ray(self, ray_origin, ray_direction, current_depth=0):
+    def trace_ray(self, ray_origin, ray_direction, current_depth=0, current_strength=1.0):
         if current_depth >= self.max_depth:
             return np.zeros(3)  # 如果递归深度超出，返回黑色
 
-        nearest_object, min_distance = self.nearest_intersected_object(ray_origin, ray_direction)
-        if nearest_object is None:
+        if current_strength < 0.1:
+            return np.zeros(3)
+        
+        obj, min_distance, N = self.nearest_intersected_object(ray_origin, ray_direction)
+        if obj is None:
             return np.zeros(3)  # 没有交点，返回黑色
 
-        intersection = ray_origin + min_distance * ray_direction
-        normal_to_surface = VectorUtils.normalize(intersection - nearest_object.center if isinstance(nearest_object, Sphere) else intersection - (nearest_object.min_point + nearest_object.max_point) / 2)
+        I = ray_origin + min_distance * ray_direction
 
-        shifted_point = intersection + 1e-5 * normal_to_surface  # 防止光线陷入物体
+        P = I + 1e-5 * N  # 防止光线陷入物体
 
         # 计算光线是否被遮挡（阴影判断）
-        intersection_to_light = VectorUtils.normalize(self.light['position'] - shifted_point)
-        _, shadow_distance = self.nearest_intersected_object(shifted_point, intersection_to_light)
-        is_shadowed = shadow_distance < np.linalg.norm(self.light['position'] - shifted_point)
+        PL = VectorUtils.normalize(self.light['position'] - P)
+        _, shadow_distance, _ = self.nearest_intersected_object(P, PL)
+        is_shadowed = shadow_distance is not None and shadow_distance < np.linalg.norm(self.light['position'] - P)
 
         # 计算光照
         illumination = np.zeros(3)
+
+        # 环境光
+        illumination += obj.ambient * obj.color * self.light['ambient']
+        
         if not is_shadowed:
-            # 环境光
-            illumination += nearest_object.ambient * self.light['ambient']
             # 漫反射
-            illumination += nearest_object.diffuse * self.light['diffuse'] * max(np.dot(intersection_to_light, normal_to_surface), 0)
+            illumination += obj.diffuse * obj.color * self.light['diffuse'] * max(np.dot(PL, N), 0)
+            
             # 高光
-            intersection_to_camera = VectorUtils.normalize(self.camera - intersection)
-            H = VectorUtils.normalize(intersection_to_light + intersection_to_camera)
-            illumination += nearest_object.specular * self.light['specular'] * (max(np.dot(normal_to_surface, H), 0) ** (nearest_object.shininess / 4))
+            PC = VectorUtils.normalize(self.camera - P)
+            H = VectorUtils.normalize(PL + PC) # 半程向量
+            illumination += obj.specular * obj.color * self.light['specular'] * (max(np.dot(N, H), 0) ** (obj.shininess))
 
         # 反射
         reflection_color = np.zeros(3)
-        reflection_ray_direction = VectorUtils.reflected(ray_direction, normal_to_surface)
-        reflection_color += nearest_object.reflection * self.trace_ray(shifted_point, reflection_ray_direction, current_depth + 1)
+        reflection_ray_direction = VectorUtils.reflected(ray_direction, N)
+        reflection_color += obj.reflectivity * obj.color * self.trace_ray(P, reflection_ray_direction, current_depth + 1, current_strength * obj.reflectivity)
 
         # 综合结果（反射 + 光照）
         color = illumination + reflection_color
         return np.clip(color, 0, 1)  # 确保颜色值在合法范围内
 
     def nearest_intersected_object(self, ray_origin, ray_direction):
-        distances = []
-        for obj in self.objects:
-            dist = obj.intersect(ray_origin, ray_direction)
-            distances.append(dist)
-
         nearest_object = None
         min_distance = np.inf
-        for index, distance in enumerate(distances):
-            if distance and distance < min_distance:
-                min_distance = distance
-                nearest_object = self.objects[index]
+        normal_to_surface = None
 
-        return nearest_object, min_distance
+        for obj in self.objects:
+            dist, normal = obj.hit(ray_origin, ray_direction)
+            if dist and dist < min_distance:
+                min_distance = dist
+                nearest_object = obj
+                normal_to_surface = normal
+
+        return nearest_object, min_distance, normal_to_surface
 
     def render(self, samples_per_pixel=4, output='image.png'):
         for i, y in enumerate(np.linspace(self.screen[1], self.screen[3], self.height)):
@@ -105,7 +109,7 @@ class RayTracer:
                 pixel_color = np.zeros(3)
                 for dy in np.linspace(-0.5, 0.5, int(np.sqrt(samples_per_pixel))):
                     for dx in np.linspace(-0.5, 0.5, int(np.sqrt(samples_per_pixel))):
-                        subpixel = np.array([x + dx / self.width, y + dy / self.height, 0])
+                        subpixel = glm.vec3(x + dx / self.width, y + dy / self.height, 0)
                         ray_direction = VectorUtils.normalize(subpixel - self.camera)
                         pixel_color += self.trace_ray(self.camera, ray_direction)
 
@@ -116,7 +120,7 @@ class RayTracer:
         plt.imsave(output, self.image)
 
 class Render:
-    def __init__(self, width=1200, height=1200, max_depth=4, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0)):
+    def __init__(self, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0)):
         self.width = width
         self.height = height
         self.max_depth = max_depth
@@ -124,9 +128,9 @@ class Render:
 
         light = {
             'position': light_pos,
-            'ambient': 0.1 * light_color,
+            'ambient': 1.0 * light_color,
             'diffuse': 1.0 * light_color,
-            'specular': 0.5 * light_color
+            'specular': 1.0 * light_color
         }
         self.light = light
 
@@ -135,19 +139,18 @@ class Render:
         screen = (-1, 1 / ratio, 1, -1 / ratio)  # left, top, right, bottom
         self.screen = screen
 
-    def run(self, objects, samples_per_pixel=4, output='image.png'):
+    def run(self, objects, samples_per_pixel=2, output='image.png'):
         # 渲染
-        ray_tracer = RayTracer(self.width, self.height, self.max_depth, self.camera, self.light,  self.screen)
-        ray_tracer.render(objects, samples_per_pixel=samples_per_pixel, output=output)
-
-# 场景物体
-objects = [
-    Sphere(np.array([-0.2, 0, -1]), 0.7, np.array([0.1, 0, 0]), np.array([0.7, 0, 0]), np.array([1, 1, 1]), 100, 0.5, 1.5),
-    Sphere(np.array([0.1, -0.3, 0]), 0.1, np.array([0.1, 0, 0.1]), np.array([0.7, 0, 0.7]), np.array([1, 1, 1]), 100, 0.5, 1.5),
-    Sphere(np.array([-0.3, 0, 0]), 0.15, np.array([0, 0.1, 0]), np.array([0, 0.6, 0]), np.array([1, 1, 1]), 100, 0.5, 1.5),
-    Sphere(np.array([0, -9000, 0]), 9000 - 0.7, np.array([0.1, 0.1, 0.1]), np.array([0.6, 0.6, 0.6]), np.array([1, 1, 1]), 100, 0.5, 1.5),
-    Cuboid(np.array([0.5, 0.5, -2]), np.array([1, 1, -1]), np.array([0.2, 0.2, 0.2]), np.array([0.6, 0.6, 0.6]), np.array([1, 1, 1]), 100, 0.4, 1)
-]
+        ray_tracer = RayTracer(self.width, self.height, self.max_depth, self.camera, self.light, objects, self.screen)
+        ray_tracer.render(samples_per_pixel=samples_per_pixel, output=output)
 
 if __name__ == '__main__':
-    Render(width=200,height=200).run(objects, samples_per_pixel=2, output='image.png')
+    # 场景物体
+    objects = [
+        Sphere(center=glm.vec3(-0.2, 0, -1), size=0.7, ambient=0.3, diffuse=0.7, specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
+        Sphere(center=glm.vec3(0.1, -0.3, 0), size=0.1, ambient=0.3, diffuse=0.7, specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
+        Sphere(center=glm.vec3(-0.3, 0, 0), size=0.15, ambient=0.3, diffuse=0.6, specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
+        Sphere(center=glm.vec3(0, -9000, 0), size=9000 - 0.7, ambient=0.3, diffuse=0.6, specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
+        Cuboid(center=glm.vec3(0.75, 0.75, -1.5), size=0.05, ambient=0.4, diffuse=0.6, specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
+    ]
+    Render(width=1000,height=1000).run(objects, samples_per_pixel=4, output='image.png')
