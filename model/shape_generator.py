@@ -10,7 +10,7 @@ class ShapeGenerator:
     def generate_sphere(radius=1.0, segments=32, rings=32, id=None, name="Sphere", obj_type="Sphere", 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
         logger.info(f"Generating sphere with radius={radius}, segments={segments}, rings={rings}")
         vertices = []
         faces = []
@@ -46,7 +46,7 @@ class ShapeGenerator:
     def generate_cuboid(width=1.0, height=1.0, depth=1.0, id=None, name="Cuboid", obj_type="Cuboid",
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         logger.info(f"Generating cuboid with width={width}, height={height}, depth={depth}")
         
         # 计算每个顶点的半边长度
@@ -110,7 +110,7 @@ class ShapeGenerator:
     def generate_plane(size=1.0, id=None, name="Plane", obj_type="Plane", 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
         logger.info(f"Generating plane with size={size}")
         s = size / 2
         vertices = [

@@ -5,3 +5,5 @@ test.py
 *.log
 */*/
 /*.png
+*.bak
+output/

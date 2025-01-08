@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 17:55:40
+LastEditTime: 2025-01-08 22:01:54
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -10,6 +10,7 @@ Copyright (c) 2025 by WhXcjm, All Rights Reserved.
 Github: https://github.com/WhXcjm
 '''
 from multiprocessing import Pool
+from PySide6.QtCore import QThread, Signal, QObject
 import numpy as np
 import matplotlib.pyplot as plt
 import glm
@@ -83,9 +84,13 @@ class VectorUtils:
             (ior * cos_theta_i - cos_theta_t) * normal
         return refracted_direction
 
-
-class RayTracer:
-    def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen):
+class TracerSignals(QObject):
+    progress_update = Signal(float, object)  # 用于传递进度和渲染图像
+    finished = Signal()  # 渲染完成时发射此信号
+    
+class RayTracer():
+    def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen, image):
+        self.signals=TracerSignals()
         self.width = width
         self.height = height
         self.max_depth = max_depth
@@ -93,7 +98,7 @@ class RayTracer:
         self.light = light
         self.objects = objects
         self.screen = screen
-        self.image = np.zeros((height, width, 3))
+        self.image = image
 
     def trace_ray(self, ray_origin, ray_direction, current_depth=0, current_strength=1.0):
         if current_depth >= self.max_depth:
@@ -162,7 +167,7 @@ class RayTracer:
 
         return nearest_object, min_distance, normal_to_surface, final_color
 
-    def render(self, spl=3, output='image.png', preview=True, callback=None, parent=None):
+    def render(self, spl=3, output='image.png', preview=True):
         # 获取设备核心数，计算核心数量
         core_count = os.cpu_count()
         blocks_per_line = int(math.sqrt(4*core_count))  # 每行块数
@@ -175,6 +180,8 @@ class RayTracer:
                 for y_list in y_blocks for x_list in x_blocks
             ]
         # 使用多进程池渲染
+        signals = self.signals
+        self.signals = None
         ltasks = len(tasks)
         count = 0
         with Pool(processes=core_count) as pool:
@@ -188,24 +195,25 @@ class RayTracer:
                 progress = (count / ltasks) * 100
                 logger.info(f"Completed {count} out of {ltasks} blocks ({progress:.2f}%)")
 
-                # 实时回调
-                if callback:
-                    callback(parent, progress, self.image)
+                signals.progress_update.emit(progress, np.copy(self.image))
 
         # 保存最终渲染结果
         plt.imsave(output, self.image)
         image = Image.fromarray((self.image * 255).astype(np.uint8))
         if preview:
             image.show()
+        signals.finished.emit()
+        self.signals = signals
 
 
-class Render:
-    def __init__(self, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), ):
+class RenderThread(QThread):
+    def __init__(self, objects, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), spl=3, output='image.png', image=None):
         logger.info(f"Initializing render with width={width}, height={height}, max_depth={max_depth}, camera={camera}, light_pos={light_pos}, light_color={light_color}")
         self.width = width
         self.height = height
         self.max_depth = max_depth
         self.camera = camera
+        self.image = image if image is not None else np.zeros((height, width, 3))
 
         light = {
             'position': light_pos,
@@ -215,38 +223,40 @@ class Render:
         }
         self.light = light
 
-        self.image = np.zeros((height, width, 3))
         ratio = float(width) / height  # 宽高比
         screen = (-10, 10 / ratio, 10, -10 / ratio)  # left, top, right, bottom
         self.screen = screen
+        self.ray_tracer = RayTracer(self.width, self.height, self.max_depth,
+                               self.camera, self.light, objects, self.screen, self.image)
+        self.spl = spl
+        self.output = output
+        super().__init__()
 
-    def run(self, objects, callback=None, spl=3, output='image.png', parent=None):
+    def run(self):
         # 渲染
-        ray_tracer = RayTracer(self.width, self.height, self.max_depth,
-                               self.camera, self.light, objects, self.screen)
-        ray_tracer.render(spl=spl, output=output, callback=callback, parent=parent)
+        self.ray_tracer.render(spl=self.spl, output=self.output)
 
 
 if __name__ == '__main__':
     # 场景物体
     # objects = [
     #     ShapeGenerator.generate_sphere(radius=0.7, center=glm.vec3(-0.2, 0, -1), ambient=0.3, diffuse=0.7,
-    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
+    #                                    specular=1, shininess=100, reflectivity=0.2, color=np.array([1, 0, 0])),
     #     ShapeGenerator.generate_sphere(radius=0.1, center=glm.vec3(0.1, -0.3, 0), ambient=0.3, diffuse=0.7,
-    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
+    #                                    specular=1, shininess=100, reflectivity=0.2, color=np.array([1, 0, 1])),
     #     ShapeGenerator.generate_sphere(radius=0.15, center=glm.vec3(-0.3, 0, 0), ambient=0.3, diffuse=0.6,
-    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
+    #                                    specular=1, shininess=100, reflectivity=0.2, color=np.array([0, 1, 0])),
     #     ShapeGenerator.generate_plane(size=90, center=glm.vec3(0, -0.7, 0), ambient=0.3, diffuse=0.6,
-    #                                   specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
+    #                                   specular=1, shininess=100, reflectivity=0.2, color=np.array([0.6, 0.6, 0.6])),
     #     ShapeGenerator.generate_cuboid(width=0.1, height=0.1, depth=0.1, center=glm.vec3(0.75, 0.75, -1.5), ambient=0.4, diffuse=0.6,
     #                                    specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
     # ]
 
     objects = [
         ShapeGenerator.generate_plane(size=8, center=glm.vec3(0, 0, 0), ambient=0.3, diffuse=0.6,
-                                    specular=1, shininess=100, reflectivity=0.5, texture='assets/chessboard.jpg'),
+                                    specular=1, shininess=100, reflectivity=0.2, texture='assets/chessboard.jpg'),
         ShapeGenerator.generate_cuboid(width=4, height=4, depth=4, center=glm.vec3(0, 0, 0), ambient=0.4, diffuse=0.6,
                                     specular=1, shininess=100, reflectivity=0.4, texture='assets/earthmap.jpg')
     ]
 
-    Render(light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run(objects, spl=3, output='image.png')
+    RenderThread(objects, spl=3, output='image.png', light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run()

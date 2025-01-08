@@ -17,7 +17,7 @@ class Object():
     def __init__(self, id=None, name="Object", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None):
         """
         Initialize an Object.
 
@@ -113,7 +113,7 @@ class Hitable(Object):
     def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None,center=glm.vec3(0.0, 0.0, 0.0)):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None,center=glm.vec3(0.0, 0.0, 0.0)):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture)
         self.center = center
         self.transformed_center = center
@@ -180,7 +180,7 @@ class Sphere(Hitable):
     def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
 
@@ -214,7 +214,7 @@ class Cuboid(Hitable):
     def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
 
@@ -222,6 +222,6 @@ class Plane(Hitable):
     def __init__(self, id=None, name="Plane", obj_type="Plane", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size

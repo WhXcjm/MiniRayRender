@@ -2,7 +2,7 @@
  * @Author: Wh_Xcjm
  * @Date: 2025-01-04 14:19:44
  * @LastEditor: Wh_Xcjm
- * @LastEditTime: 2025-01-08 16:18:17
+ * @LastEditTime: 2025-01-08 22:12:26
  * @FilePath: \大作业\README.md
  * @Description: 
  * 
@@ -20,7 +20,7 @@ To-do list：
 - [ ] import和export
 - [x] 物体类建立
 - [x] 光线追踪融合【重点】
-- [ ] 回调函数修复
+- [x] 回调函数修复
 - [ ] 视角修复
 - [ ] 添加贴图支持
 - [x] 平移旋转物体 & 实时渲染
