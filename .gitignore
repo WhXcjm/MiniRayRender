@@ -4,4 +4,4 @@ test.py
 *.pyc
 *.log
 */*/
-image.png
+/*.png

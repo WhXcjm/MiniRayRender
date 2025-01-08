@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 13:03:06
+LastEditTime: 2025-01-08 14:49:03
 FilePath: \大作业\model\objects.py
 Description: 
 

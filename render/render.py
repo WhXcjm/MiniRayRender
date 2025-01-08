@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 13:16:37
+LastEditTime: 2025-01-08 16:22:08
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -109,13 +109,13 @@ class RayTracer:
 
         I = ray_origin + min_distance * ray_direction
 
-        P = I + 1e-5 * N  # 防止光线陷入物体
+        P = I + 1e-3 * N  # 防止光线陷入物体
 
         # 计算光线是否被遮挡（阴影判断）
         PL = VectorUtils.normalize(self.light['position'] - P)
         _, shadow_distance, _ = self.nearest_intersected_object(P, PL)
         is_shadowed = shadow_distance is not None and shadow_distance < np.linalg.norm(
-            self.light['position'] - P)
+            self.light['position'] - I)
 
         # 计算光照
         illumination = np.zeros(3)
@@ -238,4 +238,6 @@ if __name__ == '__main__':
         ShapeGenerator.generate_cuboid(width=0.1, height=0.1, depth=0.1, center=glm.vec3(0.75, 0.75, -1.5), ambient=0.4, diffuse=0.6,
                                        specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
     ]
-    Render(camera=glm.vec3(0,5,10), width=200, height=200).run(objects, spl=3, output='image.png')
+    Render(light_pos=glm.vec3(5,5,5), camera=glm.vec3(0,5,10), width=300, height=200).run(objects, spl=3, output='image.png')
+
+# 定位噪点问题，经过调试发现与视角有关，大概率修正视角后可以得到解决（可能某些取整的问题）
