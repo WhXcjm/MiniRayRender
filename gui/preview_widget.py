@@ -6,7 +6,6 @@ from OpenGL.GLU import *
 import glm
 import numpy as np
 from OpenGL.GL import shaders
-from PIL import Image
 from utils.logger import logger
 
 
@@ -99,14 +98,7 @@ class PreviewWidget(QOpenGLWidget):
                 self.shader_program, "useTexture")
             # 设置纹理或颜色
             if obj.texture:
-                if obj.texture_data is None:
-                    obj.texture_data = np.array(Image.open(obj.texture).convert('RGB'))
-                img_data = obj.texture_data
-                
-                # img_data = np.array(img, dtype=np.uint8)
-                # timg = Image.fromarray(img_data)
-                # timg.show()
-                # print(img_data)
+                img_data = obj.get_texture_data()
 
                 texture = glGenTextures(1)
                 glBindTexture(GL_TEXTURE_2D, texture)

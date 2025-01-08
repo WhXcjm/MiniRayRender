@@ -2,13 +2,14 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 14:49:03
+LastEditTime: 2025-01-08 19:24:44
 FilePath: \大作业\model\objects.py
 Description: 
 
 Copyright (c) 2025 by WhXcjm, All Rights Reserved. 
 Github: https://github.com/WhXcjm
 '''
+from PIL import Image
 import numpy as np
 import glm
 
@@ -87,6 +88,27 @@ class Object():
         # Apply scale
         self.transform = glm.scale(self.transform, self.scale)
 
+    def get_texture_data(self):
+        if self.texture_data is None:
+            self.texture_data = np.array(Image.open(self.texture).convert('RGB'))
+        return self.texture_data
+    
+    def get_color_by_texcoord(self, texcoord):
+        """
+        Given a texture coordinate (texcoord), return the corresponding color from the texture.
+        texcoord should be normalized in the range [0, 1].
+        """
+        if self.texture:
+            texture_data = self.get_texture_data()
+            # Convert the normalized texcoord to pixel coordinates
+            width, height = texture_data.shape[1], texture_data.shape[0]
+            x = int(texcoord[0] * (width - 1))
+            y = int(texcoord[1] * (height - 1))
+            color = texture_data[y, x]  # (R, G, B)
+            return glm.vec3(color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
+        else:
+            return self.color  # Return pure color if no texture is applied
+
 class Hitable(Object):
     def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
@@ -99,12 +121,13 @@ class Hitable(Object):
     def hit(self, ray_origin, ray_direction):
         """
         Determine the closest intersection between the ray and the object.
-        Returns the t value and the normal of the surface where the intersection occurs.
+        Returns the t value, the normal of the surface, and the color at the intersection.
         """
         # Ensure indices is a 1D numpy array
         self.indices = np.ravel(self.indices)
         min_t = float('inf')
         hit_normal = None
+        hit_color = None
 
         # Update the transformation matrix
         self.update_transform()
@@ -142,9 +165,16 @@ class Hitable(Object):
                 min_t = t
                 hit_normal = normal
 
+                # Calculate the texture coordinates for the intersection point
+                # Get the texcoords from the triangle's vertices
+                texcoord = u * self.texcoords[self.indices[i+1]] + v * self.texcoords[self.indices[i+2]] + (1 - u - v) * self.texcoords[self.indices[i]]
+                
+                # Get the color from the texture
+                hit_color = self.get_color_by_texcoord(texcoord)
+
         if min_t == float('inf'):
-            return None, None  # No hit
-        return min_t, hit_normal
+            return None, None, None  # Not hit
+        return min_t, hit_normal, hit_color
 
 class Sphere(Hitable):
     def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[], 
@@ -166,16 +196,19 @@ class Sphere(Hitable):
         discriminant = b * b - 4.0 * a * c
 
         if discriminant < 0:
-            return None, None  # No intersection
+            return None, None, None  # No intersection
 
         t0 = (-b - glm.sqrt(discriminant)) / (2.0 * a)
         t1 = (-b + glm.sqrt(discriminant)) / (2.0 * a)
         t = min(t0, t1) if t0 > 1e-6 else t1
-        if t > 1e-6:
-            hit_point = ray_origin + t * ray_direction
-            normal = glm.normalize(hit_point - self.transformed_center)
-            return t, normal
-        return None, None
+        if t < 1e-6:
+            return None, None, None
+        
+        hit_point = ray_origin + t * ray_direction
+        normal = glm.normalize(hit_point - self.transformed_center)
+        PColor=glm.vec3(1,0,0)
+
+        return t, normal, PColor
 
 class Cuboid(Hitable):
     def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[], 

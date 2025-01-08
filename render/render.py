@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 16:22:08
+LastEditTime: 2025-01-08 17:55:40
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -102,7 +102,7 @@ class RayTracer:
         if current_strength < 0.1:
             return np.zeros(3)
 
-        obj, min_distance, N = self.nearest_intersected_object(
+        obj, min_distance, N, PColor = self.nearest_intersected_object(
             ray_origin, ray_direction)
         if obj is None:
             return np.zeros(3)  # 没有交点，返回黑色
@@ -113,7 +113,7 @@ class RayTracer:
 
         # 计算光线是否被遮挡（阴影判断）
         PL = VectorUtils.normalize(self.light['position'] - P)
-        _, shadow_distance, _ = self.nearest_intersected_object(P, PL)
+        _, shadow_distance, _, _ = self.nearest_intersected_object(P, PL)
         is_shadowed = shadow_distance is not None and shadow_distance < np.linalg.norm(
             self.light['position'] - I)
 
@@ -121,24 +121,24 @@ class RayTracer:
         illumination = np.zeros(3)
 
         # 环境光
-        illumination += obj.ambient * obj.color * self.light['ambient']
+        illumination += obj.ambient * PColor * self.light['ambient']
 
         if not is_shadowed:
             # 漫反射
-            illumination += obj.diffuse * obj.color * \
+            illumination += obj.diffuse * PColor * \
                 self.light['diffuse'] * max(np.dot(PL, N), 0)
 
             # 高光
             PC = VectorUtils.normalize(self.camera - P)
             H = VectorUtils.normalize(PL + PC)  # 半程向量
-            illumination += obj.specular * obj.color * \
+            illumination += obj.specular * PColor * \
                 self.light['specular'] * \
                 (max(np.dot(N, H), 0) ** (obj.shininess))
 
         # 反射
         reflection_color = np.zeros(3)
         reflection_ray_direction = VectorUtils.reflected(ray_direction, N)
-        reflection_color += obj.reflectivity * (obj.color + np.array([1, 1, 1])) / 2 * \
+        reflection_color += obj.reflectivity * (PColor + np.array([1, 1, 1])) / 2 * \
             self.trace_ray(P, reflection_ray_direction,
                    current_depth + 1, current_strength * obj.reflectivity)
 
@@ -150,17 +150,19 @@ class RayTracer:
         nearest_object = None
         min_distance = np.inf
         normal_to_surface = None
+        final_color = None
 
         for obj in self.objects:
-            dist, normal = obj.hit(ray_origin, ray_direction)
+            dist, normal, color = obj.hit(ray_origin, ray_direction)
             if dist and dist < min_distance:
                 min_distance = dist
                 nearest_object = obj
                 normal_to_surface = normal
+                final_color = color
 
-        return nearest_object, min_distance, normal_to_surface
+        return nearest_object, min_distance, normal_to_surface, final_color
 
-    def render(self, spl=3, output='image.png', preview=True, callback=None):
+    def render(self, spl=3, output='image.png', preview=True, callback=None, parent=None):
         # 获取设备核心数，计算核心数量
         core_count = os.cpu_count()
         blocks_per_line = int(math.sqrt(4*core_count))  # 每行块数
@@ -188,7 +190,7 @@ class RayTracer:
 
                 # 实时回调
                 if callback:
-                    callback(progress, None)
+                    callback(parent, progress, self.image)
 
         # 保存最终渲染结果
         plt.imsave(output, self.image)
@@ -199,6 +201,7 @@ class RayTracer:
 
 class Render:
     def __init__(self, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), ):
+        logger.info(f"Initializing render with width={width}, height={height}, max_depth={max_depth}, camera={camera}, light_pos={light_pos}, light_color={light_color}")
         self.width = width
         self.height = height
         self.max_depth = max_depth
@@ -214,30 +217,36 @@ class Render:
 
         self.image = np.zeros((height, width, 3))
         ratio = float(width) / height  # 宽高比
-        screen = (-1, 1 / ratio, 1, -1 / ratio)  # left, top, right, bottom
+        screen = (-10, 10 / ratio, 10, -10 / ratio)  # left, top, right, bottom
         self.screen = screen
 
-    def run(self, objects, callback=None, spl=3, output='image.png'):
+    def run(self, objects, callback=None, spl=3, output='image.png', parent=None):
         # 渲染
         ray_tracer = RayTracer(self.width, self.height, self.max_depth,
                                self.camera, self.light, objects, self.screen)
-        ray_tracer.render(spl=spl, output=output, callback=callback)
+        ray_tracer.render(spl=spl, output=output, callback=callback, parent=parent)
 
 
 if __name__ == '__main__':
     # 场景物体
-    objects = [
-        ShapeGenerator.generate_sphere(radius=0.7, center=glm.vec3(-0.2, 0, -1), ambient=0.3, diffuse=0.7,
-                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
-        ShapeGenerator.generate_sphere(radius=0.1, center=glm.vec3(0.1, -0.3, 0), ambient=0.3, diffuse=0.7,
-                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
-        ShapeGenerator.generate_sphere(radius=0.15, center=glm.vec3(-0.3, 0, 0), ambient=0.3, diffuse=0.6,
-                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
-        ShapeGenerator.generate_plane(size=90, center=glm.vec3(0, -0.7, 0), ambient=0.3, diffuse=0.6,
-                                      specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
-        ShapeGenerator.generate_cuboid(width=0.1, height=0.1, depth=0.1, center=glm.vec3(0.75, 0.75, -1.5), ambient=0.4, diffuse=0.6,
-                                       specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
-    ]
-    Render(light_pos=glm.vec3(5,5,5), camera=glm.vec3(0,5,10), width=300, height=200).run(objects, spl=3, output='image.png')
+    # objects = [
+    #     ShapeGenerator.generate_sphere(radius=0.7, center=glm.vec3(-0.2, 0, -1), ambient=0.3, diffuse=0.7,
+    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
+    #     ShapeGenerator.generate_sphere(radius=0.1, center=glm.vec3(0.1, -0.3, 0), ambient=0.3, diffuse=0.7,
+    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
+    #     ShapeGenerator.generate_sphere(radius=0.15, center=glm.vec3(-0.3, 0, 0), ambient=0.3, diffuse=0.6,
+    #                                    specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
+    #     ShapeGenerator.generate_plane(size=90, center=glm.vec3(0, -0.7, 0), ambient=0.3, diffuse=0.6,
+    #                                   specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
+    #     ShapeGenerator.generate_cuboid(width=0.1, height=0.1, depth=0.1, center=glm.vec3(0.75, 0.75, -1.5), ambient=0.4, diffuse=0.6,
+    #                                    specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
+    # ]
 
-# 定位噪点问题，经过调试发现与视角有关，大概率修正视角后可以得到解决（可能某些取整的问题）
+    objects = [
+        ShapeGenerator.generate_plane(size=8, center=glm.vec3(0, 0, 0), ambient=0.3, diffuse=0.6,
+                                    specular=1, shininess=100, reflectivity=0.5, texture='assets/chessboard.jpg'),
+        ShapeGenerator.generate_cuboid(width=4, height=4, depth=4, center=glm.vec3(0, 0, 0), ambient=0.4, diffuse=0.6,
+                                    specular=1, shininess=100, reflectivity=0.4, texture='assets/earthmap.jpg')
+    ]
+
+    Render(light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run(objects, spl=3, output='image.png')

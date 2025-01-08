@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 12:31:09
+LastEditTime: 2025-01-08 19:22:53
 FilePath: \大作业\gui\main_window.py
 Description: 
 
@@ -23,6 +23,18 @@ import numpy as np
 from PIL import Image
 from OpenGL.GL import *
 
+def on_progress_update(parent, progress, image_data):
+    # 更新进度条
+    logger.info(f"Rendering progress: {progress:.2f}%")
+    parent.progress_bar.setValue(progress)
+    # 转换为 QImage 并显示在 QLabel 中
+    height, width, _ = image_data.shape
+    qimg = QImage(image_data.data, width, height, 3 * width, QImage.Format_RGB888)
+    pixmap = QPixmap.fromImage(qimg)
+    parent.render_image_label.setPixmap(pixmap)
+    
+    # 刷新窗口
+    parent.render_window.repaint()
 
 class MainWindow(QMainWindow):
     """
@@ -96,12 +108,12 @@ class MainWindow(QMainWindow):
         self.progress_bar.setVisible(False)
 
         # 设置右侧功能区
-        right_widget = QWidget()
+        right_widget = QWidget(self)
         right_widget.setLayout(right_layout)
         main_layout.addWidget(right_widget, 2)
 
         # 设置主窗口的中央部件
-        main_widget = QWidget()
+        main_widget = QWidget(self)
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
@@ -225,7 +237,7 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # 创建新的窗口来展示渲染效果
-        self.render_window = QWidget()
+        self.render_window = QWidget(self)
         self.render_window.setWindowTitle("Rendering Progress")
         self.render_width = self.preview.width
         self.render_height = self.preview.height
@@ -254,20 +266,7 @@ class MainWindow(QMainWindow):
             render = Render(width=self.main_window.render_width, height=self.main_window.render_height, camera=self.main_window.preview.eye, light_pos=self.main_window.preview.light_pos)
             
             # 需要使用回调传递进度和图像数据
-            render.run(self.main_window.scene_objects, self.progress_callback)
-
-    def on_progress_update(self, progress, image_data):
-        # 更新进度条
-        logger.info(f"Rendering progress: {progress:.2f}%")
-        pass
-        # # 转换为 QImage 并显示在 QLabel 中
-        # height, width, _ = image_data.shape
-        # qimg = QImage(image_data.data, width, height, 3 * width, QImage.Format_RGB888)
-        # pixmap = QPixmap.fromImage(qimg)
-        # self.render_image_label.setPixmap(pixmap)
-        
-        # # 刷新窗口
-        # self.render_window.repaint()
+            render.run(self.main_window.scene_objects, self.progress_callback, parent=self.main_window)
 
     def start_rendering(self):
         """
@@ -278,7 +277,7 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # 启动渲染的异步操作
-        self.render_thread = self.RenderThread(self, self.on_progress_update)
+        self.render_thread = self.RenderThread(self, on_progress_update)
         self.render_thread.start()
 
     def add_shape(self):

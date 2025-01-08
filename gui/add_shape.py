@@ -85,6 +85,8 @@ def add_shape_to_scene(shape_name, size, color=None, texture=None, name=None):
     """
     shape_id = AddShapeDialog().get_next_shape_id()  # 获取新的唯一id
     logger.info(f"Generating shape #{shape_id}: {shape_name} with size={size}, color={color}, texture={texture}")
+    if name is None:
+        name = f"{shape_name}_{shape_id}"
     obj = ShapeGenerator.generate_shape(shape_name, size, shape_id, name)
     
     # 根据选择的颜色或纹理修改数据
