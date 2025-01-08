@@ -2,14 +2,14 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 17:55:40
+LastEditTime: 2025-01-08 20:53:11
 FilePath: \大作业\render\render.py
 Description: 
 
 Copyright (c) 2025 by WhXcjm, All Rights Reserved. 
 Github: https://github.com/WhXcjm
 '''
-from multiprocessing import Pool
+from PySide6.QtCore import QThreadPool, QThread, QRunnable, Signal, QObject, QMutex, QMutexLocker, Slot
 import numpy as np
 import matplotlib.pyplot as plt
 import glm
@@ -34,7 +34,20 @@ def split_list(lst, num_blocks):
         start = end
     return result
 
-def render_block_worker(args):
+class WorkerSignals(QObject):
+    finished = Signal(int, int, np.ndarray)
+
+class RenderTaskBlock(QRunnable):
+    def __init__(self, parent, y_list, x_list, sy, sx, spl):
+        super().__init__()
+        self.parent = parent
+        self.y_list = y_list
+        self.x_list = x_list
+        self.sy = sy
+        self.sx = sx
+        self.spl = spl
+        self.signals = WorkerSignals()
+    def run(self):
         """
         渲染一个矩形块
         :param y_list: 块的y坐标列表
@@ -42,7 +55,7 @@ def render_block_worker(args):
         :param spl: 每方向像素采样数
         :return: 渲染块的结果（像素数据）
         """
-        parent, y_list, x_list, sy, sx, spl = args
+        parent, y_list, x_list, sy, sx, spl = self.parent, self.y_list, self.x_list, self.sy, self.sx, self.spl
         logger.info(f"Rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
         block_image = np.zeros((len(y_list), len(x_list), 3))  # 单独的块图像数据
         for i, y in y_list:
@@ -56,11 +69,12 @@ def render_block_worker(args):
                         ray_direction = VectorUtils.normalize(
                             subpixel - parent.camera)
                         pixel_color += parent.trace_ray(parent.camera,
-                                                      ray_direction)
+                                                        ray_direction)
 
                 block_image[i-sy, j-sx] = np.clip(pixel_color / (spl * spl), 0, 1)
             # logger.info(f"Finished rendering line {i} : X range {x_list[0][0]}-{x_list[-1][0]}")
         logger.info(f"Finished rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
+        self.signals.finished.emit(sy, sx, block_image)
         return sy, sx, block_image  # 返回渲染结果
 
 class VectorUtils:
@@ -82,10 +96,13 @@ class VectorUtils:
         refracted_direction = ior * ray_direction + \
             (ior * cos_theta_i - cos_theta_t) * normal
         return refracted_direction
-
-
-class RayTracer:
+    
+class RayTracer(QObject):
+    progress_update = Signal(int, np.ndarray)  # 用于传递进度和渲染图像
+    finished = Signal()  # 渲染完成时发射此信号
+    
     def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen):
+        super().__init__()
         self.width = width
         self.height = height
         self.max_depth = max_depth
@@ -94,6 +111,7 @@ class RayTracer:
         self.objects = objects
         self.screen = screen
         self.image = np.zeros((height, width, 3))
+        self.mutex = QMutex()  # 创建一个锁
 
     def trace_ray(self, ray_origin, ray_direction, current_depth=0, current_strength=1.0):
         if current_depth >= self.max_depth:
@@ -162,7 +180,7 @@ class RayTracer:
 
         return nearest_object, min_distance, normal_to_surface, final_color
 
-    def render(self, spl=3, output='image.png', preview=True, callback=None, parent=None):
+    def render(self, spl=3, output='image.png', preview=True):
         # 获取设备核心数，计算核心数量
         core_count = os.cpu_count()
         blocks_per_line = int(math.sqrt(4*core_count))  # 每行块数
@@ -174,33 +192,46 @@ class RayTracer:
                 (self, y_list, x_list, y_list[0][0], x_list[0][0], spl)
                 for y_list in y_blocks for x_list in x_blocks
             ]
-        # 使用多进程池渲染
-        ltasks = len(tasks)
-        count = 0
-        with Pool(processes=core_count) as pool:
-            for sy, sx, block_image in pool.imap_unordered(render_block_worker, tasks):
-                # 合并结果到主图像
-                for i in range(block_image.shape[0]):
-                    for j in range(block_image.shape[1]):
-                        self.image[sy + i, sx + j] = block_image[i, j]
+        self.ltasks = len(tasks)
+        self.count = 0
 
-                count += 1
-                progress = (count / ltasks) * 100
-                logger.info(f"Completed {count} out of {ltasks} blocks ({progress:.2f}%)")
+        # 使用 QThreadPool 管理线程
+        thread_pool = QThreadPool.globalInstance()  # 获取全局线程池实例
+        threads = []
+        for (pa, y_list, x_list, sy, sx, spl) in tasks:
+            thread = RenderTaskBlock(pa, y_list, x_list, sy, sx, spl)
+            thread.signals.finished.connect(self.handle_task_result)  # 连接进度更新信号
+            thread_pool.start(thread)  # 自动分配线程
+            threads.append(thread)
 
-                # 实时回调
-                if callback:
-                    callback(parent, progress, self.image)
+        # 等待所有任务完成
+        thread_pool.waitForDone()
 
         # 保存最终渲染结果
         plt.imsave(output, self.image)
         image = Image.fromarray((self.image * 255).astype(np.uint8))
         if preview:
             image.show()
+        self.finished.emit()
+
+    @Slot()
+    def handle_task_result(self, sy, sx, block_image):
+        """
+        处理每个任务完成的结果
+        """
+        with QMutexLocker(self.mutex):
+            # 合并结果到主图像
+            for i in range(block_image.shape[0]):
+                for j in range(block_image.shape[1]):
+                    self.image[sy + i, sx + j] = block_image[i, j]
+            self.count += 1
+            # 更新进度信息
+            progress = self.count / self.ltasks * 100
+            self.progress_update.emit(int(progress), self.image)
 
 
-class Render:
-    def __init__(self, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), ):
+class RenderThread(QThread):
+    def __init__(self, objects, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), spl=3, output='image.png'):
         logger.info(f"Initializing render with width={width}, height={height}, max_depth={max_depth}, camera={camera}, light_pos={light_pos}, light_color={light_color}")
         self.width = width
         self.height = height
@@ -219,12 +250,15 @@ class Render:
         ratio = float(width) / height  # 宽高比
         screen = (-10, 10 / ratio, 10, -10 / ratio)  # left, top, right, bottom
         self.screen = screen
-
-    def run(self, objects, callback=None, spl=3, output='image.png', parent=None):
-        # 渲染
-        ray_tracer = RayTracer(self.width, self.height, self.max_depth,
+        self.ray_tracer = RayTracer(self.width, self.height, self.max_depth,
                                self.camera, self.light, objects, self.screen)
-        ray_tracer.render(spl=spl, output=output, callback=callback, parent=parent)
+        self.spl = spl
+        self.output = output
+        super().__init__()
+
+    def run(self):
+        # 渲染
+        self.ray_tracer.render(spl=self.spl, output=self.output)
 
 
 if __name__ == '__main__':
@@ -249,4 +283,4 @@ if __name__ == '__main__':
                                     specular=1, shininess=100, reflectivity=0.4, texture='assets/earthmap.jpg')
     ]
 
-    Render(light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run(objects, spl=3, output='image.png')
+    RenderThread(objects, spl=3, output='image.png', light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run()

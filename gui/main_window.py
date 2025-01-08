@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 19:22:53
+LastEditTime: 2025-01-08 19:57:43
 FilePath: \大作业\gui\main_window.py
 Description: 
 
@@ -16,25 +16,12 @@ from gui.preview_widget import PreviewWidget
 from gui.add_shape import AddShapeDialog, add_shape_to_scene
 from gui.transform import TransformConfigDialog
 from model.shape_generator import ShapeGenerator
-from render.render import Render
+from render.render import RenderThread
 from utils.logger import logger
 import glm
 import numpy as np
 from PIL import Image
 from OpenGL.GL import *
-
-def on_progress_update(parent, progress, image_data):
-    # 更新进度条
-    logger.info(f"Rendering progress: {progress:.2f}%")
-    parent.progress_bar.setValue(progress)
-    # 转换为 QImage 并显示在 QLabel 中
-    height, width, _ = image_data.shape
-    qimg = QImage(image_data.data, width, height, 3 * width, QImage.Format_RGB888)
-    pixmap = QPixmap.fromImage(qimg)
-    parent.render_image_label.setPixmap(pixmap)
-    
-    # 刷新窗口
-    parent.render_window.repaint()
 
 class MainWindow(QMainWindow):
     """
@@ -254,20 +241,6 @@ class MainWindow(QMainWindow):
         # 在新线程中执行渲染过程
         self.start_rendering()
 
-    # 创建一个专门的渲染线程类
-    class RenderThread(QThread):
-        def __init__(self, main_window, progress_callback):
-            super().__init__()
-            self.main_window = main_window
-            self.progress_callback = progress_callback
-
-        def run(self):
-            # 在独立线程中运行渲染
-            render = Render(width=self.main_window.render_width, height=self.main_window.render_height, camera=self.main_window.preview.eye, light_pos=self.main_window.preview.light_pos)
-            
-            # 需要使用回调传递进度和图像数据
-            render.run(self.main_window.scene_objects, self.progress_callback, parent=self.main_window)
-
     def start_rendering(self):
         """
         启动渲染并通过回调更新进度和图像显示
@@ -277,8 +250,33 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # 启动渲染的异步操作
-        self.render_thread = self.RenderThread(self, on_progress_update)
+        self.render_thread = RenderThread(self.scene_objects, self.render_width, height=self.render_height, camera=self.preview.eye, light_pos=self.preview.light_pos)
+        self.render_thread.ray_tracer.progress_update.connect(self.on_progress_update)
+        self.render_thread.ray_tracer.finished.connect(self.on_render_finished)
+
+        # 启动渲染线程
         self.render_thread.start()
+
+    def on_progress_update(self, progress, image_data):
+        """
+        更新进度条和渲染图像
+        """
+        # 更新进度条
+        self.progress_bar.setValue(progress)
+
+        # 转换为 QImage 并显示在 QLabel 中
+        height, width, _ = image_data.shape
+        qimg = QImage(image_data.data, width, height, 3 * width, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(qimg)
+        self.render_image_label.setPixmap(pixmap)
+
+    def on_render_finished(self):
+        """
+        渲染完成后的处理
+        """
+        self.render_button.setEnabled(True)
+        # self.progress_bar.setVisible(False)
+        self.render_image_label.setText("Rendering Finished!")
 
     def add_shape(self):
         self.add_shape_dialog = AddShapeDialog(self)
