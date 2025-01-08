@@ -2,20 +2,21 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-07 22:40:55
+LastEditTime: 2025-01-08 12:31:09
 FilePath: \大作业\gui\main_window.py
 Description: 
 
 Copyright (c) 2025 by WhXcjm, All Rights Reserved. 
 Github: https://github.com/WhXcjm
 '''
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog, QLabel, QProgressBar
+from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtCore import Qt, QThread
 from gui.preview_widget import PreviewWidget
+from gui.add_shape import AddShapeDialog, add_shape_to_scene
+from gui.transform import TransformConfigDialog
 from model.shape_generator import ShapeGenerator
-from model.add_shape import AddShapeDialog, add_shape_to_scene
-from model.transform_config import TransformConfigDialog
+from render.render import Render
 from utils.logger import logger
 import glm
 import numpy as np
@@ -66,6 +67,33 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.rotate_button)
         right_layout.addWidget(self.reset_button)
         right_layout.addWidget(self.render_button)
+
+        # 进度条
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
+        # 自定义进度条样式
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border-width: 1px;
+                border-style: solid;
+                border-color: #E7E7E7 #E7E7E7 #C2C2C2 #E7E7E7;
+                border-radius: 5px;
+                background-color: #FBFBFB;
+                margin: 0px 2px 0px 2px;
+            }
+            QProgressBar::chunk {
+                background-color: #4caf50;
+                border-radius: 5px;
+            }
+            QProgressBar::horizontal {
+                text-align: center;
+            }
+        """)
+        right_layout.addWidget(self.progress_bar)
+        self.progress_bar.setVisible(False)
 
         # 设置右侧功能区
         right_widget = QWidget()
@@ -192,7 +220,66 @@ class MainWindow(QMainWindow):
         渲染当前场景
         """
         logger.info("Starting rendering process")
-        self.preview.start_render()
+        self.render_button.setEnabled(False)
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+
+        # 创建新的窗口来展示渲染效果
+        self.render_window = QWidget()
+        self.render_window.setWindowTitle("Rendering Progress")
+        self.render_width = self.preview.width
+        self.render_height = self.preview.height
+        self.render_window.setGeometry(100, 100, self.render_width, self.render_height)
+        self.render_window.setFixedSize(self.render_width, self.render_height)
+        self.render_window_layout = QVBoxLayout()
+
+        # 创建一个 QLabel 来展示渲染图像
+        self.render_image_label = QLabel()
+        self.render_window_layout.addWidget(self.render_image_label)
+        self.render_window.setLayout(self.render_window_layout)
+        self.render_window.show()
+
+        # 在新线程中执行渲染过程
+        self.start_rendering()
+
+    # 创建一个专门的渲染线程类
+    class RenderThread(QThread):
+        def __init__(self, main_window, progress_callback):
+            super().__init__()
+            self.main_window = main_window
+            self.progress_callback = progress_callback
+
+        def run(self):
+            # 在独立线程中运行渲染
+            render = Render(width=self.main_window.render_width, height=self.main_window.render_height, camera=self.main_window.preview.eye, light_pos=self.main_window.preview.light_pos)
+            
+            # 需要使用回调传递进度和图像数据
+            render.run(self.main_window.scene_objects, self.progress_callback)
+
+    def on_progress_update(self, progress, image_data):
+        # 更新进度条
+        logger.info(f"Rendering progress: {progress:.2f}%")
+        pass
+        # # 转换为 QImage 并显示在 QLabel 中
+        # height, width, _ = image_data.shape
+        # qimg = QImage(image_data.data, width, height, 3 * width, QImage.Format_RGB888)
+        # pixmap = QPixmap.fromImage(qimg)
+        # self.render_image_label.setPixmap(pixmap)
+        
+        # # 刷新窗口
+        # self.render_window.repaint()
+
+    def start_rendering(self):
+        """
+        启动渲染并通过回调更新进度和图像显示
+        """
+
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
+        # 启动渲染的异步操作
+        self.render_thread = self.RenderThread(self, self.on_progress_update)
+        self.render_thread.start()
 
     def add_shape(self):
         self.add_shape_dialog = AddShapeDialog(self)

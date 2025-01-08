@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:30:47
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-07 22:54:17
+LastEditTime: 2025-01-08 12:22:35
 FilePath: \大作业\main.py
 Description: 
 
@@ -13,7 +13,7 @@ import sys, glm
 import numpy as np
 from PySide6.QtWidgets import QApplication
 from gui.main_window import MainWindow
-from model.add_shape import *
+from gui.add_shape import *
 
 def main():
     """

@@ -1,7 +1,7 @@
 # model/add_shape.py
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton, QColorDialog, QFileDialog, QLineEdit
 from utils.logger import logger
-from .shape_generator import ShapeGenerator
+from model.shape_generator import ShapeGenerator
 from model.objects import *
 import sys
 

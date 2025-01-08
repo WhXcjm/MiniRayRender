@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-07 22:31:20
+LastEditTime: 2025-01-08 12:51:21
 FilePath: \大作业\model\objects.py
 Description: 
 
@@ -147,7 +147,7 @@ class Hitable(Object):
         return min_t, hit_normal
 
 class Sphere(Hitable):
-    def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
+    def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
                  specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
@@ -178,7 +178,7 @@ class Sphere(Hitable):
         return None, None
 
 class Cuboid(Hitable):
-    def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
+    def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
                  specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
@@ -186,7 +186,7 @@ class Cuboid(Hitable):
         self.size = size
 
 class Plane(Hitable):
-    def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
+    def __init__(self, id=None, name="Plane", obj_type="Plane", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
                  specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
