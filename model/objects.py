@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 12:51:21
+LastEditTime: 2025-01-08 13:03:06
 FilePath: \大作业\model\objects.py
 Description: 
 
@@ -110,9 +110,9 @@ class Hitable(Object):
         self.update_transform()
 
         for i in range(0, len(self.indices), 3):
-            v0 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i]], 1.0))
-            v1 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i+1]], 1.0))
-            v2 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i+2]], 1.0))
+            v0 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i]], 1.0)) + self.center
+            v1 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i+1]], 1.0)) + self.center
+            v2 = glm.vec3(self.transform * glm.vec4(self.vertices[self.indices[i+2]], 1.0)) + self.center
             normal = glm.normalize(glm.vec3(self.transform * glm.vec4(self.normals[self.indices[i]], 0.0)) +
                                    glm.vec3(self.transform * glm.vec4(self.normals[self.indices[i+1]], 0.0)) +
                                    glm.vec3(self.transform * glm.vec4(self.normals[self.indices[i+2]], 0.0)))

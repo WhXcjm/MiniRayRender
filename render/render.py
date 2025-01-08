@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 12:48:29
+LastEditTime: 2025-01-08 13:16:37
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -227,15 +227,15 @@ class Render:
 if __name__ == '__main__':
     # 场景物体
     objects = [
-        Sphere(center=glm.vec3(-0.2, 0, -1), size=0.7, ambient=0.3, diffuse=0.7,
-               specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
-        Sphere(center=glm.vec3(0.1, -0.3, 0), size=0.1, ambient=0.3, diffuse=0.7,
-               specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
-        Sphere(center=glm.vec3(-0.3, 0, 0), size=0.15, ambient=0.3, diffuse=0.6,
-               specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
-        Plane(center=glm.vec3(0, -0.7, 0), size=90, ambient=0.3, diffuse=0.6,
-               specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
-        Cuboid(center=glm.vec3(0.75, 0.75, -1.5), size=0.05, ambient=0.4, diffuse=0.6,
-               specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
+        ShapeGenerator.generate_sphere(radius=0.7, center=glm.vec3(-0.2, 0, -1), ambient=0.3, diffuse=0.7,
+                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 0])),
+        ShapeGenerator.generate_sphere(radius=0.1, center=glm.vec3(0.1, -0.3, 0), ambient=0.3, diffuse=0.7,
+                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([1, 0, 1])),
+        ShapeGenerator.generate_sphere(radius=0.15, center=glm.vec3(-0.3, 0, 0), ambient=0.3, diffuse=0.6,
+                                       specular=1, shininess=100, reflectivity=0.5, color=np.array([0, 1, 0])),
+        ShapeGenerator.generate_plane(size=90, center=glm.vec3(0, -0.7, 0), ambient=0.3, diffuse=0.6,
+                                      specular=1, shininess=100, reflectivity=0.5, color=np.array([0.6, 0.6, 0.6])),
+        ShapeGenerator.generate_cuboid(width=0.1, height=0.1, depth=0.1, center=glm.vec3(0.75, 0.75, -1.5), ambient=0.4, diffuse=0.6,
+                                       specular=1, shininess=100, reflectivity=0.4, color=np.array([1, 1, 1]))
     ]
-    Render(width=200, height=200).run(objects, spl=3, output='image.png')
+    Render(camera=glm.vec3(0,5,10), width=200, height=200).run(objects, spl=3, output='image.png')

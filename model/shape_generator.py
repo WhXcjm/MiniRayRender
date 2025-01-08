@@ -107,7 +107,10 @@ class ShapeGenerator:
 
 
     @staticmethod
-    def generate_plane(size=1.0):
+    def generate_plane(size=1.0, id=None, name="Plane", obj_type="Plane", 
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
+                 specular=0.3, shininess=8, reflectivity=0.5, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
         logger.info(f"Generating plane with size={size}")
         s = size / 2
         vertices = [
@@ -133,20 +136,20 @@ class ShapeGenerator:
         normals = np.array(normals, dtype=np.float32)
         texcoords = np.array(texcoords, dtype=np.float32)
 
-        return Plane(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords)
+        return Plane(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords, id=id, name=name, obj_type=obj_type, translation=translation, rotation=rotation, scale=scale, color=color, ambient=ambient, diffuse=diffuse, specular=specular, shininess=shininess, reflectivity=reflectivity, texture=texture, center=center, size=size)
 
     @staticmethod
-    def generate_shape(shape_name, size):
+    def generate_shape(shape_name, size, id, name):
         """
         通用几何体生成接口，根据名称调用对应方法
         """
         logger.info(f"Generating shape: {shape_name} with size={size}")
         if shape_name == "Sphere":
-            return ShapeGenerator.generate_sphere(radius=size)
+            return ShapeGenerator.generate_sphere(radius=size, id=id, name=name)
         elif shape_name == "Cuboid":
-            return ShapeGenerator.generate_cuboid(width=size * 2, height=size * 2, depth=size * 2)
+            return ShapeGenerator.generate_cuboid(width=size * 2, height=size * 2, depth=size * 2, id=id, name=name)
         elif shape_name == "Plane":
-            return ShapeGenerator.generate_plane(size=size * 2)
+            return ShapeGenerator.generate_plane(size=size * 2, id=id, name=name)
         else:
             logger.error(f"Unknown shape: {shape_name}")
             raise ValueError(f"Unknown shape: {shape_name}")
