@@ -8,10 +8,14 @@ import glm
 class ShapeGenerator:
     @staticmethod
     def generate_sphere(radius=1.0, segments=32, rings=32, id=None, name="Sphere", obj_type="Sphere", 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=None, 
                  color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0)):
         logger.info(f"Generating sphere with radius={radius}, segments={segments}, rings={rings}")
+        # 临时性解决方案，将size(radius)直接作为缩放量，保证逆变换后球体会到单位球体。
+        if scale is None:
+            scale = glm.vec3(radius, radius, radius)
+        radius = 1.0
         vertices = []
         faces = []
         normals = []
@@ -40,7 +44,10 @@ class ShapeGenerator:
         normals = np.array(normals, dtype=np.float32)
         texcoords = np.array(texcoords, dtype=np.float32)
 
-        return Sphere(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords, id=id, name=name, obj_type=obj_type, translation=translation, rotation=rotation, scale=scale, color=color, ambient=ambient, diffuse=diffuse, specular=specular, shininess=shininess, reflectivity=reflectivity, texture=texture, center=center, size=radius)
+        obj = Sphere(vertices=vertices, normals=normals, indices=indices, texcoords=texcoords, id=id, name=name, obj_type=obj_type, translation=translation, rotation=rotation, scale=scale, color=color, ambient=ambient, diffuse=diffuse, specular=specular, shininess=shininess, reflectivity=reflectivity, texture=texture, center=center, size=radius)
+
+        obj.update_transform()
+        return obj
 
     @staticmethod
     def generate_cuboid(width=1.0, height=1.0, depth=1.0, id=None, name="Cuboid", obj_type="Cuboid",

@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-13 00:57:44
+LastEditTime: 2025-01-13 04:17:16
 FilePath: \大作业\model\objects.py
 Description: 
 
@@ -12,11 +12,13 @@ Github: https://github.com/WhXcjm
 from PIL import Image
 import numpy as np
 import glm, math
+from utils.logger import logger
+
 
 class Object():
-    def __init__(self, id=None, name="Object", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+    def __init__(self, id=None, name="Object", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[],
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0),
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9,
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None):
         """
         Initialize an Object.
@@ -92,7 +94,7 @@ class Object():
         if self.texture_data is None:
             self.texture_data = np.array(Image.open(self.texture).convert('RGB'))
         return self.texture_data
-    
+
     def get_color_by_texcoord(self, texcoord):
         """
         Given a texture coordinate (texcoord), return the corresponding color from the texture.
@@ -109,10 +111,11 @@ class Object():
         else:
             return self.color  # Return pure color if no texture is applied
 
+
 class Hitable(Object):
-    def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+    def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[],
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0),
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9,
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None,center=glm.vec3(0.0, 0.0, 0.0)):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture)
         self.center = center
@@ -144,7 +147,7 @@ class Hitable(Object):
             edge2 = v2 - v0
             h = glm.cross(ray_direction, edge2)
             a = glm.dot(edge1, h)
-            
+
             if -1e-6 < a < 1e-6:
                 continue  # Parallel to the triangle
             f = 1.0 / a
@@ -168,7 +171,7 @@ class Hitable(Object):
                 # Calculate the texture coordinates for the intersection point
                 # Get the texcoords from the triangle's vertices
                 texcoord = u * self.texcoords[self.indices[i+1]] + v * self.texcoords[self.indices[i+2]] + (1 - u - v) * self.texcoords[self.indices[i]]
-                
+
                 # Get the color from the texture
                 hit_color = self.get_color_by_texcoord(texcoord)
 
@@ -177,9 +180,10 @@ class Hitable(Object):
         return min_t, hit_normal, hit_color
 
 class Sphere(Hitable):
-    def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[], 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+    # 注：球体的center固定为 (0, 0, 0)，平移通过translation实现
+    def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[],
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0),
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9,
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
@@ -188,15 +192,21 @@ class Sphere(Hitable):
         # Sphere-ray intersection using the quadratic formula
         # Update the transformation matrix
         self.update_transform()
+        ray_direction = glm.normalize(ray_direction)
 
-        # 注：由于时间紧张工程量大，所以在进行缩放变换，或者需要材质贴图的情况下，暂时先调用三角方法，效率较低但也能有不错的效果。
+        # 计算逆变换矩阵
+        inverse_transform = glm.inverse(self.transform)
+        inverse_transpose = glm.transpose(inverse_transform)
 
-        if(self.transform != glm.mat4(1.0) or self.texture):
-            return super().hit(ray_origin, ray_direction)
-        self.transformed_center = glm.vec3(self.transform * glm.vec4(self.center, 1.0))
-        oc = ray_origin - self.transformed_center
-        a = glm.dot(ray_direction, ray_direction)
-        b = 2.0 * glm.dot(oc, ray_direction)
+        # 将光线从世界坐标系转换到物体坐标系
+        # 光线原点 (点) 需要乘以逆变换矩阵
+        ray_origin_obj = glm.vec3(inverse_transform * glm.vec4(ray_origin, 1.0))
+        # 光线方向 (向量) 需要乘以逆变换矩阵，不考虑平移
+        ray_direction_obj = glm.normalize(glm.vec3(inverse_transform * glm.vec4(ray_direction, 0.0)))
+
+        oc = ray_origin_obj - self.center
+        a = glm.dot(ray_direction_obj, ray_direction_obj)
+        b = 2.0 * glm.dot(oc, ray_direction_obj)
         c = glm.dot(oc, oc) - self.size * self.size
         discriminant = b * b - 4.0 * a * c
 
@@ -205,41 +215,62 @@ class Sphere(Hitable):
 
         t0 = (-b - glm.sqrt(discriminant)) / (2.0 * a)
         t1 = (-b + glm.sqrt(discriminant)) / (2.0 * a)
-        t = min(t0, t1) if t0 > 1e-6 else t1
-        if t < 1e-6:
+        t_obj = min(t0, t1) if t0 > 1e-6 else t1
+        if t_obj < 1e-6:
             return None, None, None
-        
-        hit_point = ray_origin + t * ray_direction
-        normal = glm.normalize(hit_point - self.transformed_center)
-        
+
+        # 交点在物体坐标系下
+        hit_point_obj = ray_origin_obj + t_obj * ray_direction_obj
+        normal_obj = glm.normalize(hit_point_obj - glm.vec3(0.0, 0.0, 0.0))  # 法线在物体坐标系下
+
+        # 将交点转换回世界坐标系
+        hit_point_world = glm.vec3(self.transform * glm.vec4(hit_point_obj, 1.0))
+
+        # 将法线转换回世界坐标系
+        normal_world = glm.normalize(glm.vec3(inverse_transpose * glm.vec4(normal_obj, 0.0)))
+
+        t_world = glm.length(hit_point_world - ray_origin)
+
         if self.texture:
-            # 将世界坐标的法向量转换到物体坐标系
-            obj_normal = glm.vec3(glm.transpose(glm.inverse(self.transform)) * glm.vec4(normal, 0.0))
+            # 计算球面坐标
+            theta = math.atan2(normal_obj.z, normal_obj.x)  # 范围：[-pi, pi]
+            phi = math.acos(normal_obj.y / self.size)     # 范围：[0, pi]
 
-            theta = math.atan2(obj_normal.z, obj_normal.x)  # Range: [-pi, pi]
-            phi = math.acos(obj_normal.y / self.size)   # Range: [0, pi]
-
-            # Normalize theta to [0, 2*pi]
+            # 将 theta 规范化到 [0, 2*pi]
             if theta < 0:
                 theta += 2 * math.pi
 
-            hit_color = glm.vec3(1,0,0)
+            # 映射到纹理坐标 [0, 1]
+            u = 1 - (theta / (2 * math.pi))
+            v = phi / math.pi
+
+            # 检查 u 和 v 是否在 [0, 1] 范围内
+            if not (0.0 <= u <= 1.0) or not (0.0 <= v <= 1.0):
+                raise ValueError(f"Texture coordinates out of range: u={u}, v={v}")
+
+            # 从纹理中获取颜色
+            hit_color = self.get_color_by_texcoord((u, v))
         else:
             hit_color = self.color
-        return t, normal, hit_color
+
+        return t_world, normal_world, glm.vec3(hit_color)
 
 class Cuboid(Hitable):
-    def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[], 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+    def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[],
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0),
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9,
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
 
 class Plane(Hitable):
-    def __init__(self, id=None, name="Plane", obj_type="Plane", vertices=[], normals=[], indices=[], texcoords=[], 
-                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+    def __init__(self, id=None, name="Plane", obj_type="Plane", vertices=[], normals=[], indices=[], texcoords=[],
+                 translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0),
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9,
                  specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
+
+if __name__ == "__main__":
+    obj = Sphere(size=1,translation = glm.vec3(2.0, 0.0, 0.0),scale=glm.vec3(1,1,1),texture="assets/earthmap.jpg")
+    print(obj.hit(glm.vec3(0.0, 0.0, 0.0), glm.vec3(1.0, 0.5, 0.0)))

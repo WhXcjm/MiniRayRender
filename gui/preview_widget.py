@@ -107,6 +107,8 @@ class PreviewWidget(QOpenGLWidget):
             if obj.texture:
                 img_data = obj.get_texture_data()
 
+                # 绑定纹理
+                glActiveTexture(GL_TEXTURE0 + texture_unit)
                 texture = glGenTextures(1)
                 glBindTexture(GL_TEXTURE_2D, texture)
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_data.shape[1], img_data.shape[0], 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
@@ -120,9 +122,6 @@ class PreviewWidget(QOpenGLWidget):
                     GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
                 glTexParameteri(
                     GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-                # 绑定纹理
-                glActiveTexture(GL_TEXTURE0 + texture_unit)
                 glBindTexture(GL_TEXTURE_2D, texture)
                 tex_loc = glGetUniformLocation(self.shader_program, "texture1")
                 glUniform1i(tex_loc, texture_unit)
