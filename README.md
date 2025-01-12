@@ -2,7 +2,7 @@
  * @Author: Wh_Xcjm
  * @Date: 2025-01-04 14:19:44
  * @LastEditor: Wh_Xcjm
- * @LastEditTime: 2025-01-12 15:25:39
+ * @LastEditTime: 2025-01-12 21:22:49
  * @FilePath: \大作业\README.md
  * @Description: 
  * 
@@ -30,5 +30,5 @@ To-do list：
 - [ ] 添加球体贴图支持
 - [x] 平移旋转物体 & 实时渲染
 - [x] 平移旋转视图 & 与自动旋转耦合 & 实时渲染
-- [ ] 物体重命名、删除物体
+- [x] 物体重命名、删除物体
 - [ ] 写报告【重点】

@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-12 16:06:15
+LastEditTime: 2025-01-12 16:20:57
 FilePath: \大作业\gui\main_window.py
 Description: 
 
@@ -126,11 +126,26 @@ class MainWindow(QMainWindow):
 		self.update_object_list()
 
 		self.is_rotating = False  # 旋转状态
+		self.object_list.cellChanged.connect(self.handle_name_change)
+
+	def handle_name_change(self, row, column):
+		"""
+		处理名称修改时更新物体名称。
+		"""
+		if column == 0:  # 只处理第一列的修改
+			item = self.object_list.item(row, 0)
+			if item:
+				new_name = item.text()
+				# 找到对应物体并更新名称
+				obj = self.scene_objects[row]
+				obj.name = new_name
+				self.update_object_list()  # 刷新列表显示新的名称
 
 	def update_object_list(self):
 		"""
 		更新 GUI 列表并同步预览窗口
 		"""
+		self.object_list.blockSignals(True)  # 阻止信号触发
 		for row in range(self.object_list.rowCount()):
 			self.object_list.removeRow(row)
 		self.object_list.setRowCount(0)
@@ -149,10 +164,11 @@ class MainWindow(QMainWindow):
 			self.object_list.insertRow(row)
 			self.object_list.setItem(row, 0, QTableWidgetItem(obj.name))
 			appearance = f"Texture: \"{obj.texture}\"" if obj.texture else f"Color: {obj.color}"
-			item = QTableWidgetItem(appearance)
-			item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-			item.setToolTip(appearance)  # 鼠标悬停时显示完整内容
-			self.object_list.setItem(row, 1, item)
+			appearance_item = QTableWidgetItem(appearance)
+			appearance_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+			appearance_item.setToolTip(appearance)  # 鼠标悬停时显示完整内容
+			appearance_item.setFlags(appearance_item.flags() & ~Qt.ItemIsEditable)
+			self.object_list.setItem(row, 1, appearance_item)
 			
 			button_widget = QWidget()
 			button_layout = QHBoxLayout()
@@ -178,6 +194,7 @@ class MainWindow(QMainWindow):
 			button_widget.setLayout(button_layout)
 			self.object_list.setCellWidget(row, 2, button_widget)
 
+		self.object_list.blockSignals(False)  # 阻止信号触发
 		self.preview.update_objects(self.scene_objects)
 
 	def delete_object(self, obj):
@@ -191,9 +208,7 @@ class MainWindow(QMainWindow):
 		# 创建并展示 TransformConfigDialog 对话框
 		dialog = TransformConfigDialog(obj, callback=self.update_object_list, parent=self)
 
-		dialog.show()  # 阻塞直到对话框关闭
-		# if dialog.exec() == QDialog.Accepted:
-		#     self.update_object_list()  # 更新列表与渲染
+		dialog.show()
 			
 	def toggle_rotation(self):
 		"""

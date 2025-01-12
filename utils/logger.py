@@ -13,7 +13,7 @@ Github: https://github.com/WhXcjm
 import logging
 import sys
 
-def setup_logger(name="MiniRayRender", log_file="minirayrender.log", level=logging.DEBUG):
+def setup_logger(name="MiniRayRender", log_file="minirayrender.log", level=logging.INFO):
     """
     设置日志工具
     :param name: 日志记录器名称
