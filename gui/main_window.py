@@ -2,14 +2,14 @@
 Author: Wh_Xcjm
 Date: 2025-01-04 14:36:07
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 22:11:20
+LastEditTime: 2025-01-12 15:11:16
 FilePath: \大作业\gui\main_window.py
 Description: 
 
 Copyright (c) 2025 by WhXcjm, All Rights Reserved. 
 Github: https://github.com/WhXcjm
 '''
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog, QLabel, QProgressBar
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QFileDialog, QHeaderView, QDialog, QLabel, QProgressBar, QSizePolicy
 from PySide6.QtGui import QIcon, QImage, QPixmap
 from PySide6.QtCore import Qt, QThread
 from gui.preview_widget import PreviewWidget
@@ -28,17 +28,25 @@ class MainWindow(QMainWindow):
     """
     主窗口，包含左侧预览窗格和右侧功能列表。
     """
-    def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0)):
+    def __init__(self, light_pos = glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0), up=glm.vec3(0, 1, 0), fov=60, near=0.1, far=100.0):
         super().__init__()
         self.setWindowTitle("MiniRayRender")
         self.setWindowIcon(QIcon("assets/icon.png"))
         self.setGeometry(100, 100, 1200, 800)
+        self.properties = {
+            "eye": eye,
+            "center": center,
+            "up": up,
+            "fov": fov,
+            "near": near,
+            "far": far
+        }
 
         # 主布局
         main_layout = QHBoxLayout()
 
         # 左侧预览窗格
-        self.preview = PreviewWidget(light_pos=light_pos, eye=eye, center=center)
+        self.preview = PreviewWidget(self, light_pos, eye, center, up, fov, near, far)
         main_layout.addWidget(self.preview, 5)
 
         # 右侧功能区
@@ -225,16 +233,40 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # 创建新的窗口来展示渲染效果
-        self.render_window = QDialog(self)
-        self.render_window.setWindowTitle("Rendering Progress")
+        class RenderWindow(QDialog):
+            def __init__(self, width, height):
+                super().__init__()
+                self.aspect_ratio = width / height  # 保持宽高比
+                self.setWindowTitle("Rendering...")
+                self.setGeometry(100, 100, width, height)
+                self.setMinimumWidth(200)  # 设置最小宽度，防止窗口过小
+                self.setMinimumHeight(200)  # 设置最小高度，防止窗口过小
+
+            def resizeEvent(self, event):
+                """ 保持宽高比固定 """
+                new_width = event.size().width()
+                new_height = int(new_width / self.aspect_ratio)  # 根据宽高比计算新的高度
+
+                # 调整窗口高度以保持宽高比
+                self.resize(new_width, new_height)
+                event.accept()  # 继续处理事件
         self.render_width = self.preview.width
         self.render_height = self.preview.height
+        self.render_window = RenderWindow(self.render_width, self.render_height)
         self.render_window.setGeometry(100, 100, self.render_width, self.render_height)
-        self.render_window.setFixedSize(self.render_width, self.render_height)
+        # 获取窗口所在的屏幕
+        screen = self.screen()
+        device_pixel_ratio = screen.devicePixelRatio() if screen else 1  # 获取缩放倍率
+        self.render_width = int(self.render_width * device_pixel_ratio)
+        self.render_height = int(self.render_height * device_pixel_ratio)
         self.render_window_layout = QVBoxLayout()
 
         # 创建一个 QLabel 来展示渲染图像
         self.render_image_label = QLabel()
+        # 设置自动缩放
+        self.render_image_label.setScaledContents(True)
+        # 设置大小策略为扩展
+        self.render_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.render_window_layout.addWidget(self.render_image_label)
         self.render_window.setLayout(self.render_window_layout)
         self.render_window.show()
@@ -251,7 +283,10 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # 启动渲染的异步操作
-        self.render_thread = RenderThread(self.scene_objects, self.render_width, height=self.render_height, camera=self.preview.eye, light_pos=self.preview.light_pos)
+        
+        self.properties['eye'] = self.preview.auto_eye
+        self.properties['center'] = self.preview.center
+        self.render_thread = RenderThread(self.scene_objects, self.properties, self.render_width, height=self.render_height, light_pos=self.preview.light_pos)
         self.render_thread.ray_tracer.signals.progress_update.connect(self.on_progress_update)
         self.render_thread.ray_tracer.signals.finished.connect(self.on_render_finished)
 

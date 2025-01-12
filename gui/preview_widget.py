@@ -13,7 +13,7 @@ class PreviewWidget(QOpenGLWidget):
     """
     负责渲染场景的 OpenGL Widget
     """
-    def __init__(self, parent=None, light_pos=glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0),):
+    def __init__(self, parent=None, light_pos=glm.vec3(-1.0, 3.0, -2.0), eye=glm.vec3(0, 5, 10), center=glm.vec3(0, 0, 0), up=glm.vec3(0, 1, 0), fov=60.0, near=0.1, far=100.0):
         super().__init__(parent)
         self.shader_program = None
         self.object_list = []
@@ -22,7 +22,9 @@ class PreviewWidget(QOpenGLWidget):
 
         self.auto_eye = self.original_eye = self.last_eye = self.eye = eye
         self.original_center = self.last_center = self.center = center
-        self.view = glm.lookAt(eye, center, glm.vec3(0, 1, 0))  # 默认视图矩阵
+        self.view = glm.lookAt(eye, center, up)  # 默认视图矩阵
+        self.fov = fov
+        self.proj_func = lambda width, height: glm.perspective(glm.radians(60.0), width/height, near, far)  # 投影矩阵函数
 
         self.is_rotating = False  # 默认不旋转
         self.auto_rotation_angle = 0.0  # 初始旋转角度
@@ -52,8 +54,7 @@ class PreviewWidget(QOpenGLWidget):
         """
         计算模型-视图-投影矩阵
         """
-        proj = glm.perspective(glm.radians(
-            60.0), self.width / self.height, 0.1, 100.0)
+        proj = self.proj_func(self.width, self.height)
         view = self.view
         mvp = proj * view * transform
         return mvp
@@ -65,6 +66,7 @@ class PreviewWidget(QOpenGLWidget):
         glViewport(0, 0, width, height)
         self.width = width
         self.height = height
+        logger.info(f"Resized to {width}x{height}")
 
     def paintGL(self):
         """

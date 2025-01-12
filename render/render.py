@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:11:50
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 22:01:54
+LastEditTime: 2025-01-12 14:40:33
 FilePath: \大作业\render\render.py
 Description: 
 
@@ -35,34 +35,41 @@ def split_list(lst, num_blocks):
         start = end
     return result
 
-def render_block_worker(args):
-        """
-        渲染一个矩形块
-        :param y_list: 块的y坐标列表
-        :param x_list: 块的x坐标列表
-        :param spl: 每方向像素采样数
-        :return: 渲染块的结果（像素数据）
-        """
-        parent, y_list, x_list, sy, sx, spl = args
-        logger.info(f"Rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
-        block_image = np.zeros((len(y_list), len(x_list), 3))  # 单独的块图像数据
-        for i, y in y_list:
-            for j, x in x_list:
-                # 超采样
-                pixel_color = np.zeros(3)
-                for dy in np.linspace(-0.5, 0.5, spl):
-                    for dx in np.linspace(-0.5, 0.5, spl):
-                        subpixel = glm.vec3(
-                            x + dx / parent.width, y + dy / parent.height, 0)
-                        ray_direction = VectorUtils.normalize(
-                            subpixel - parent.camera)
-                        pixel_color += parent.trace_ray(parent.camera,
-                                                      ray_direction)
+def ndc_to_world(x, y, i_VP):
+    z = 1.0
+    coords = glm.vec4(x, y, z, 1.0)
+    world_coords = i_VP * coords
+    # return glm.vec3(x, y, 0)
+    return glm.vec3(world_coords.x/world_coords.w, world_coords.y/world_coords.w, world_coords.z/world_coords.w)
 
-                block_image[i-sy, j-sx] = np.clip(pixel_color / (spl * spl), 0, 1)
-            # logger.info(f"Finished rendering line {i} : X range {x_list[0][0]}-{x_list[-1][0]}")
-        logger.info(f"Finished rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
-        return sy, sx, block_image  # 返回渲染结果
+def render_block_worker(args):
+    """
+    渲染一个矩形块
+    :param y_list: 块的y坐标列表
+    :param x_list: 块的x坐标列表
+    :param spl: 每方向像素采样数
+    :return: 渲染块的结果（像素数据）
+    """
+    parent, y_list, x_list, sy, sx, i_VP, spl = args
+    logger.info(f"Rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
+    block_image = np.zeros((len(y_list), len(x_list), 3))  # 单独的块图像数据
+    for i, y in y_list:
+        for j, x in x_list:
+            # 超采样
+            pixel_color = np.zeros(3)
+            for dy in np.linspace(-1, 1, spl):
+                for dx in np.linspace(-1, 1, spl):
+                    subpixel = ndc_to_world(
+                        x + dx / parent.width, y + dy / parent.height, i_VP)
+                    ray_direction = VectorUtils.normalize(
+                        subpixel - parent.camera)
+                    pixel_color += parent.trace_ray(parent.camera,
+                                                    ray_direction)
+
+            block_image[i-sy, j-sx] = np.clip(pixel_color / (spl * spl), 0, 1)
+        # logger.info(f"Finished rendering line {i} : X range {x_list[0][0]}-{x_list[-1][0]}")
+    logger.info(f"Finished rendering block: Y range {y_list[0][0]}-{y_list[-1][0]}, X range {x_list[0][0]}-{x_list[-1][0]}")
+    return sy, sx, block_image  # 返回渲染结果
 
 class VectorUtils:
     @staticmethod
@@ -89,7 +96,7 @@ class TracerSignals(QObject):
     finished = Signal()  # 渲染完成时发射此信号
     
 class RayTracer():
-    def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen, image):
+    def __init__(self, width, height, max_depth, camera, light, objects: list[Hitable], screen, image, VP):
         self.signals=TracerSignals()
         self.width = width
         self.height = height
@@ -99,6 +106,7 @@ class RayTracer():
         self.objects = objects
         self.screen = screen
         self.image = image
+        self.VP = VP
 
     def trace_ray(self, ray_origin, ray_direction, current_depth=0, current_strength=1.0):
         if current_depth >= self.max_depth:
@@ -175,8 +183,9 @@ class RayTracer():
             self.screen[1], self.screen[3], self.height))], blocks_per_line)
         x_blocks = split_list(list(enumerate(np.linspace(
             self.screen[0], self.screen[2], self.width))), blocks_per_line)
+        i_VP = glm.inverse(self.VP)
         tasks = [
-                (self, y_list, x_list, y_list[0][0], x_list[0][0], spl)
+                (self, y_list, x_list, y_list[0][0], x_list[0][0], i_VP, spl)
                 for y_list in y_blocks for x_list in x_blocks
             ]
         # 使用多进程池渲染
@@ -207,7 +216,8 @@ class RayTracer():
 
 
 class RenderThread(QThread):
-    def __init__(self, objects, width=1200, height=1200, max_depth=5, camera=glm.vec3(0, 10, 20), light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), spl=3, output='image.png', image=None):
+    def __init__(self, objects, properties, width=1200, height=1200, light_pos=glm.vec3(-1.0, 3.0, -2.0), light_color=glm.vec3(1.0, 1.0, 1.0), max_depth=5, spl=3, output='image.png', image=None):
+        camera=properties['eye']
         logger.info(f"Initializing render with width={width}, height={height}, max_depth={max_depth}, camera={camera}, light_pos={light_pos}, light_color={light_color}")
         self.width = width
         self.height = height
@@ -222,12 +232,12 @@ class RenderThread(QThread):
             'specular': 1.0 * light_color
         }
         self.light = light
-
-        ratio = float(width) / height  # 宽高比
-        screen = (-10, 10 / ratio, 10, -10 / ratio)  # left, top, right, bottom
+        screen = (-1, 1, 1, -1)  # left, top, right, bottom
         self.screen = screen
+        proj_matrix = glm.perspective(glm.radians(properties['fov']), width/height, properties['near'], properties['far'])
+        view_matrix = glm.lookAt(camera, properties['center'], properties['up'])
         self.ray_tracer = RayTracer(self.width, self.height, self.max_depth,
-                               self.camera, self.light, objects, self.screen, self.image)
+                               self.camera, self.light, objects, self.screen, self.image, VP=proj_matrix * view_matrix)
         self.spl = spl
         self.output = output
         super().__init__()
@@ -258,5 +268,12 @@ if __name__ == '__main__':
         ShapeGenerator.generate_cuboid(width=4, height=4, depth=4, center=glm.vec3(0, 0, 0), ambient=0.4, diffuse=0.6,
                                     specular=1, shininess=100, reflectivity=0.4, texture='assets/earthmap.jpg')
     ]
-
-    RenderThread(objects, spl=3, output='image.png', light_pos=glm.vec3(5,5,5), camera=glm.vec3(3,5,10), width=300, height=200).run()
+    properties = {
+        'eye': glm.vec3(3, 5, 10),
+        'center': glm.vec3(0, 0, 0), 
+        'up': glm.vec3(0, 1, 0),
+        'fov': 60.0,
+        'near': 0.1,
+        'far': 100.0
+    }
+    RenderThread(objects, properties, output='image.png', light_pos=glm.vec3(5,5,5), width=300, height=200, spl=3).run()
