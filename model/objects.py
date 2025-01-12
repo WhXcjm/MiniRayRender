@@ -2,7 +2,7 @@
 Author: Wh_Xcjm
 Date: 2025-01-05 14:20:45
 LastEditor: Wh_Xcjm
-LastEditTime: 2025-01-08 19:24:44
+LastEditTime: 2025-01-13 00:57:44
 FilePath: \大作业\model\objects.py
 Description: 
 
@@ -11,13 +11,13 @@ Github: https://github.com/WhXcjm
 '''
 from PIL import Image
 import numpy as np
-import glm
+import glm, math
 
 class Object():
     def __init__(self, id=None, name="Object", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.2, texture=None):
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+                 specular=0.25, shininess=8, reflectivity=0.2, texture=None):
         """
         Initialize an Object.
 
@@ -112,8 +112,8 @@ class Object():
 class Hitable(Object):
     def __init__(self, id=None, name="Hitable", obj_type="Custom", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.2, texture=None,center=glm.vec3(0.0, 0.0, 0.0)):
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+                 specular=0.25, shininess=8, reflectivity=0.2, texture=None,center=glm.vec3(0.0, 0.0, 0.0)):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture)
         self.center = center
         self.transformed_center = center
@@ -179,8 +179,8 @@ class Hitable(Object):
 class Sphere(Hitable):
     def __init__(self, id=None, name="Sphere", obj_type="Sphere", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+                 specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
 
@@ -188,6 +188,11 @@ class Sphere(Hitable):
         # Sphere-ray intersection using the quadratic formula
         # Update the transformation matrix
         self.update_transform()
+
+        # 注：由于时间紧张工程量大，所以在进行缩放变换，或者需要材质贴图的情况下，暂时先调用三角方法，效率较低但也能有不错的效果。
+
+        if(self.transform != glm.mat4(1.0) or self.texture):
+            return super().hit(ray_origin, ray_direction)
         self.transformed_center = glm.vec3(self.transform * glm.vec4(self.center, 1.0))
         oc = ray_origin - self.transformed_center
         a = glm.dot(ray_direction, ray_direction)
@@ -206,22 +211,35 @@ class Sphere(Hitable):
         
         hit_point = ray_origin + t * ray_direction
         normal = glm.normalize(hit_point - self.transformed_center)
-        PColor=glm.vec3(1,0,0)
+        
+        if self.texture:
+            # 将世界坐标的法向量转换到物体坐标系
+            obj_normal = glm.vec3(glm.transpose(glm.inverse(self.transform)) * glm.vec4(normal, 0.0))
 
-        return t, normal, PColor
+            theta = math.atan2(obj_normal.z, obj_normal.x)  # Range: [-pi, pi]
+            phi = math.acos(obj_normal.y / self.size)   # Range: [0, pi]
+
+            # Normalize theta to [0, 2*pi]
+            if theta < 0:
+                theta += 2 * math.pi
+
+            hit_color = glm.vec3(1,0,0)
+        else:
+            hit_color = self.color
+        return t, normal, hit_color
 
 class Cuboid(Hitable):
     def __init__(self, id=None, name="Cuboid", obj_type="Cuboid", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+                 specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size
 
 class Plane(Hitable):
     def __init__(self, id=None, name="Plane", obj_type="Plane", vertices=[], normals=[], indices=[], texcoords=[], 
                  translation=glm.vec3(0.0, 0.0, 0.0), rotation=glm.vec3(0.0, 0.0, 0.0), scale=glm.vec3(1.0, 1.0, 1.0), 
-                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.4, diffuse=1.0, 
-                 specular=0.3, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
+                 color=glm.vec3(1.0, 1.0, 1.0), ambient=0.35, diffuse=0.9, 
+                 specular=0.25, shininess=8, reflectivity=0.2, texture=None, center=glm.vec3(0.0, 0.0, 0.0), size=1.0):
         super().__init__(id, name, obj_type, vertices, normals, indices, texcoords, translation, rotation, scale, color, ambient, diffuse, specular, shininess, reflectivity, texture, center)
         self.size = size

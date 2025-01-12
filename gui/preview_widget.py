@@ -78,6 +78,11 @@ class PreviewWidget(QOpenGLWidget):
         # 设置光源位置和颜色
         light_pos_loc = glGetUniformLocation(self.shader_program, "lightPos")
         glUniform3f(light_pos_loc, *self.fixed_light_pos)
+        
+        # 设置光照强度
+        glUniform1f(glGetUniformLocation(self.shader_program, "ambientStrength"), 0.35)
+        glUniform1f(glGetUniformLocation(self.shader_program, "diffuseStrength"), 0.9)
+        glUniform1f(glGetUniformLocation(self.shader_program, "specularStrength"), 0.25)
 
         light_color_loc = glGetUniformLocation(
             self.shader_program, "lightColor")
@@ -223,22 +228,23 @@ class PreviewWidget(QOpenGLWidget):
         uniform sampler2D texture1;   // 主纹理
         uniform bool useTexture;      // 是否使用纹理
         uniform vec3 viewPos;         // 观察者位置
+        uniform float ambientStrength;  // 环境光强度
+        uniform float diffuseStrength;  // 漫反射强度
+        uniform float specularStrength; // 镜面反射强度
 
         out vec4 FragColor;
 
         void main() {
             // 环境光
-            float ambientStrength = 0.4;
             vec3 ambient = ambientStrength * lightColor;
 
             // 漫反射
             vec3 norm = normalize(Normal);
             vec3 lightDir = normalize(lightPos - FragPos);
             float diff = max(dot(norm, lightDir), 0.0);
-            vec3 diffuse = diff * lightColor;
+            vec3 diffuse = diff * lightColor * diffuseStrength;
 
             // 镜面反射 (Blinn-Phong 模型)
-            float specularStrength = 0.3;
             float shininess = 8.0;  // 可调节的高光度（越大，反射越小）
             
             // 计算视角方向（从片段指向观察者）
